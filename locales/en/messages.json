@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "DeliverableEstimatePro3 - 4-Agent AI Configuration",
+    "debug_mode": "Debug mode is enabled",
+    "api_key_status": "OPENAI_API_KEY: {status}",
+    "api_key_set": "Set",
+    "api_key_not_set": "Not set",
+    "required_env_missing": "Required environment variables are not set: {vars}"
+  },
+  "input": {
+    "title": "Collecting Input Information",
+    "excel_file_from_arg": "Excel file obtained from argument: {file}",
+    "excel_file_prompt": "Enter the path to the Excel file: ",
+    "default_file_used": "Using default file: {file}",
+    "system_requirements_prompt": "Enter system requirements (enter an empty line to finish):",
+    "default_requirements_used": "Using default requirements: {requirements}"
+  },
+  "excel": {
+    "analyzing": "Analyzing Excel...",
+    "error": "Excel analysis error: {error}",
+    "success": "Loaded {count} deliverables",
+    "deliverables_list": "Loaded deliverables:",
+    "deliverable_item": "{index}. {name}: {description}"
+  },
+  "workflow": {
+    "title": "Starting 4-Agent Estimation Workflow",
+    "completed": "Workflow completed"
+  },
+  "output": {
+    "title": "Outputting results...",
+    "not_approved": "Estimate not approved. Skipping output.",
+    "invalid_result": "No valid estimation result.",
+    "excel_success": "Estimate output to: {file}",
+    "total_amount": "Total amount: ¥{amount}",
+    "excel_error": "Excel output error: {error}",
+    "session_log": "Session log output to: {file}",
+    "log_error": "Log output error: {error}"
+  },
+  "error": {
+    "user_interrupt": "Process interrupted by user",
+    "unexpected": "Unexpected error occurred: {error}",
+    "app_init": "Application initialization error: {error}"
+  },
+  "default": {
+    "requirements": "E-commerce site construction project. Includes user management, product management, and payment functions."
+  },
+  "user_interaction": {
+    "title": "Starting User Interaction",
+    "approval_prompt": "Do you approve? (y/n/modification request): ",
+    "approved": "Estimate has been approved",
+    "feedback_prompt": "Please tell us what needs to be modified: ",
+    "max_iterations": "Maximum number of iterations reached"
+  },
+  "refinement": {
+    "title": "Improving the estimate...",
+    "completed": "Improvement completed"
+  }
+}

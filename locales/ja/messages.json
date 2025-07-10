@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "DeliverableEstimatePro3 - 4エージェント生成AI構成",
+    "debug_mode": "デバッグモードが有効です",
+    "api_key_status": "OPENAI_API_KEY: {status}",
+    "api_key_set": "設定済み",
+    "api_key_not_set": "未設定",
+    "required_env_missing": "必須環境変数が設定されていません: {vars}"
+  },
+  "input": {
+    "title": "入力情報の収集",
+    "excel_file_from_arg": "引数からExcelファイルを取得: {file}",
+    "excel_file_prompt": "Excelファイルのパスを入力してください: ",
+    "default_file_used": "デフォルトファイルを使用: {file}",
+    "system_requirements_prompt": "システム要件を入力してください (終了するには空行を入力):",
+    "default_requirements_used": "デフォルト要件を使用: {requirements}"
+  },
+  "excel": {
+    "analyzing": "Excel解析中...",
+    "error": "Excel解析エラー: {error}",
+    "success": "成果物{count}件を読み込みました",
+    "deliverables_list": "読み込まれた成果物:",
+    "deliverable_item": "{index}. {name}: {description}"
+  },
+  "workflow": {
+    "title": "4エージェント見積もりワークフロー開始",
+    "completed": "ワークフロー完了"
+  },
+  "output": {
+    "title": "結果出力中...",
+    "not_approved": "見積もりが承認されていません。出力をスキップします。",
+    "invalid_result": "有効な見積もり結果がありません。",
+    "excel_success": "見積書を出力しました: {file}",
+    "total_amount": "総額: ¥{amount}",
+    "excel_error": "Excel出力エラー: {error}",
+    "session_log": "セッションログを出力しました: {file}",
+    "log_error": "ログ出力エラー: {error}"
+  },
+  "error": {
+    "user_interrupt": "ユーザーによる処理中断",
+    "unexpected": "予期しないエラーが発生しました: {error}",
+    "app_init": "アプリケーション初期化エラー: {error}"
+  },
+  "default": {
+    "requirements": "ECサイトの構築プロジェクト。ユーザー管理、商品管理、決済機能を含む。"
+  },
+  "user_interaction": {
+    "title": "ユーザー対話開始",
+    "approval_prompt": "承認しますか？ (y/n/修正要求): ",
+    "approved": "見積もりが承認されました",
+    "feedback_prompt": "修正が必要な点を教えてください: ",
+    "max_iterations": "最大反復回数に達しました"
+  },
+  "refinement": {
+    "title": "見積もり改善中...",
+    "completed": "改善完了"
+  }
+}

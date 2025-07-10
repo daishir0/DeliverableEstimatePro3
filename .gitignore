@@ -1,0 +1,10 @@
+.env
+
+__pycache__/
+agents/__pycache__
+
+input/*
+!input/.gitkeep
+
+output/*
+!output/.gitkeep
