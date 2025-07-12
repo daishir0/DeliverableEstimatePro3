@@ -1,0 +1,53 @@
+{
+  "orchestrator": {
+    "title": "Starting 4-Agent Estimation Workflow",
+    "completed": "Workflow completed",
+    "parallel_evaluation_start": "Starting parallel evaluation: Business, Quality, Constraints",
+    "parallel_evaluation_complete": "Parallel evaluation completed",
+    "estimation_generation": "Starting estimation generation",
+    "estimation_complete": "Estimation generation completed"
+  },
+  "agents": {
+    "business": {
+      "name": "Business Requirements Agent",
+      "description": "Business requirement clarity evaluation",
+      "start": "Business & Functional Requirements Evaluation - Started",
+      "complete": "Business & Functional Requirements Evaluation - Completed"
+    },
+    "quality": {
+      "name": "Quality Requirements Agent",
+      "description": "Quality requirement completeness evaluation", 
+      "start": "Quality & Non-Functional Requirements Evaluation - Started",
+      "complete": "Quality & Non-Functional Requirements Evaluation - Completed"
+    },
+    "constraints": {
+      "name": "Constraints Agent",
+      "description": "Constraint condition comprehensiveness evaluation",
+      "start": "Constraints & External Integration Evaluation - Started",
+      "complete": "Constraints & External Integration Evaluation - Completed"
+    },
+    "estimation": {
+      "name": "Estimation Agent",
+      "description": "Integrated estimation calculation",
+      "start": "Calculating estimation...",
+      "complete": "Estimation generation completed"
+    }
+  },
+  "user_interaction": {
+    "title": "Starting User Interaction",
+    "approval_prompt": "Do you approve? (y/n/modification request): ",
+    "approved": "Estimate has been approved",
+    "feedback_prompt": "Please tell us what needs to be modified: ",
+    "max_iterations": "Maximum number of iterations reached"
+  },
+  "refinement": {
+    "title": "Improving the estimate...",
+    "completed": "Improvement completed",
+    "recalculating": "Recalculating estimate with modification requests..."
+  },
+  "performance": {
+    "parallel_execution_time": "Parallel execution completed - Total time: %{time}s",
+    "agent_execution_time": "%{agent} execution time: %{time}s",
+    "success_rate": "Evaluation success rate: %{success}/%{total} agents"
+  }
+}

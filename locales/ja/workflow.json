@@ -1,0 +1,53 @@
+{
+  "orchestrator": {
+    "title": "4エージェント見積もりワークフロー開始",
+    "completed": "ワークフロー完了",
+    "parallel_evaluation_start": "並列評価開始: Business, Quality, Constraints",
+    "parallel_evaluation_complete": "並列評価完了",
+    "estimation_generation": "見積もり生成開始",
+    "estimation_complete": "見積もり生成完了"
+  },
+  "agents": {
+    "business": {
+      "name": "業務・機能要件エージェント",
+      "description": "業務要件の明確性評価",
+      "start": "業務・機能要件評価 - 開始",
+      "complete": "業務・機能要件評価 - 完了"
+    },
+    "quality": {
+      "name": "品質・非機能要件エージェント", 
+      "description": "品質要件の完全性評価",
+      "start": "品質・非機能要件評価 - 開始",
+      "complete": "品質・非機能要件評価 - 完了"
+    },
+    "constraints": {
+      "name": "制約・外部連携エージェント",
+      "description": "制約条件の網羅性評価",
+      "start": "制約・外部連携要件評価 - 開始", 
+      "complete": "制約・外部連携要件評価 - 完了"
+    },
+    "estimation": {
+      "name": "見積もり生成エージェント",
+      "description": "統合的見積もり算出",
+      "start": "見積もり計算中...",
+      "complete": "見積もり生成完了"
+    }
+  },
+  "user_interaction": {
+    "title": "ユーザー対話開始",
+    "approval_prompt": "承認しますか？ (y/n/修正要求): ",
+    "approved": "見積もりが承認されました",
+    "feedback_prompt": "修正が必要な点を教えてください: ",
+    "max_iterations": "最大反復回数に達しました"
+  },
+  "refinement": {
+    "title": "見積もり改善中...",
+    "completed": "改善完了",
+    "recalculating": "修正要求を反映した見積もり再計算中..."
+  },
+  "performance": {
+    "parallel_execution_time": "並列実行完了 - 総時間: %{time}秒",
+    "agent_execution_time": "%{agent}実行時間: %{time}秒",
+    "success_rate": "評価成功率: %{success}/%{total} エージェント"
+  }
+}

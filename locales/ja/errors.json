@@ -1,0 +1,38 @@
+{
+  "system": {
+    "user_interrupt": "ユーザーによる処理中断",
+    "unexpected": "予期しないエラーが発生しました: %{error}",
+    "app_init": "アプリケーション初期化エラー: %{error}",
+    "workflow_error": "ワークフロー実行エラー: %{error}",
+    "parallel_evaluation_error": "並列評価システムエラー: %{error}",
+    "estimation_generation_error": "見積もり生成エラー: %{error}",
+    "refinement_error": "改善実行エラー: %{error}"
+  },
+  "agents": {
+    "execution_error": "%{agent}エージェント実行エラー: %{error}",
+    "validation_error": "%{agent}エージェントバリデーションエラー: %{error}",
+    "timeout": "%{agent}エージェント - タイムアウト",
+    "business_error": "業務エージェント実行エラー: %{error}",
+    "quality_error": "品質エージェント実行エラー: %{error}",
+    "constraints_error": "制約エージェント実行エラー: %{error}",
+    "estimation_error": "見積もりエージェント実行エラー: %{error}"
+  },
+  "validation": {
+    "invalid_input": "無効な入力データです",
+    "parser_creation_error": "パーサー作成エラー: %{error}",
+    "prompt_chain_error": "プロンプト・チェーン作成エラー: %{error}",
+    "missing_required_fields": "必須フィールドが見つかりません: %{fields}",
+    "evaluation_incomplete": "並列評価が完了していません"
+  },
+  "i18n": {
+    "translation_error": "翻訳エラー (キー: '%{key}'): %{error}",
+    "unsupported_locale": "サポートされていない言語: %{locale}。デフォルトの'ja'を使用します",
+    "locale_changed": "言語を変更しました: %{locale}"
+  },
+  "warnings": {
+    "api_key_missing": "OpenAI APIキーが設定されていません。%{agent}はダミーデータを返します。",
+    "dummy_data_used": "APIキーが無いため%{agent}のダミーデータです",
+    "deprecated_api": "I18nUtilsクラスは非推奨です。'from config.i18n_config import t'を使用してください。",
+    "modification_not_applied": "修正要求が技術前提条件に反映されていない可能性があります: %{requirement}"
+  }
+}

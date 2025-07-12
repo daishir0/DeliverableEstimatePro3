@@ -1,0 +1,38 @@
+{
+  "system": {
+    "user_interrupt": "Process interrupted by user",
+    "unexpected": "Unexpected error occurred: %{error}",
+    "app_init": "Application initialization error: %{error}",
+    "workflow_error": "Workflow execution error: %{error}",
+    "parallel_evaluation_error": "Parallel evaluation system error: %{error}",
+    "estimation_generation_error": "Estimation generation error: %{error}",
+    "refinement_error": "Refinement execution error: %{error}"
+  },
+  "agents": {
+    "execution_error": "%{agent} agent execution error: %{error}",
+    "validation_error": "%{agent} agent validation error: %{error}",
+    "timeout": "%{agent} agent - Timeout",
+    "business_error": "Business agent execution error: %{error}",
+    "quality_error": "Quality agent execution error: %{error}",
+    "constraints_error": "Constraints agent execution error: %{error}",
+    "estimation_error": "Estimation agent execution error: %{error}"
+  },
+  "validation": {
+    "invalid_input": "Invalid input data",
+    "parser_creation_error": "Parser creation error: %{error}",
+    "prompt_chain_error": "Prompt chain creation error: %{error}",
+    "missing_required_fields": "Required fields not found: %{fields}",
+    "evaluation_incomplete": "Parallel evaluation not completed"
+  },
+  "i18n": {
+    "translation_error": "Translation error (key: '%{key}'): %{error}",
+    "unsupported_locale": "Unsupported locale: %{locale}. Using default 'ja'",
+    "locale_changed": "Locale changed to: %{locale}"
+  },
+  "warnings": {
+    "api_key_missing": "OpenAI API key not set. %{agent} will return dummy data.",
+    "dummy_data_used": "Using dummy data for %{agent} due to missing API key",
+    "deprecated_api": "I18nUtils class is deprecated. Use 'from config.i18n_config import t' instead.",
+    "modification_not_applied": "Modification request may not be reflected in technical assumptions: %{requirement}"
+  }
+}

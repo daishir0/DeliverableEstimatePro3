@@ -8,7 +8,7 @@ import os
 import traceback
 from typing import Dict, Any, List
 
-from utils.i18n_utils import i18n_utils as i18n
+from config.i18n_config import t
 
 from agents.estimation_agent_v2 import EstimationAgentV2
 from agents.business_requirements_agent_v2 import BusinessRequirementsAgentV2
@@ -42,7 +42,7 @@ class SimpleWorkflowOrchestrator:
                         system_requirements: str, 
                         deliverables: List[Dict[str, Any]]) -> EstimationState:
         """ワークフロー実行"""
-        print(f"🚀 {i18n.t('workflow.title')}")
+        print(f"🚀 {t('workflow.orchestrator.title')}")
         
         # 初期状態作成
         state = create_initial_state(excel_input, system_requirements, deliverables)
@@ -57,18 +57,18 @@ class SimpleWorkflowOrchestrator:
             # Step 3: ユーザー対話ループ
             state = self._execute_user_interaction_loop(state)
             
-            print(f"🎯 {i18n.t('workflow.completed')}")
+            print(f"🎯 {t('workflow.orchestrator.completed')}")
             return state
             
         except Exception as e:
-            error_msg = f"❌ ワークフロー実行エラー: {str(e)}"
+            error_msg = f"❌ {t('errors.system.workflow_error', error=str(e))}"
             print(error_msg)
             state["errors"] = state.get("errors", []) + [error_msg]
             return state
     
     def _execute_parallel_evaluation(self, state: EstimationState) -> EstimationState:
         """並列評価実行 - 実際の並列実行版"""
-        print("🔄 並列評価開始: Business, Quality, Constraints")
+        print(f"🔄 {t('workflow.orchestrator.parallel_evaluation_start')}")
         
         try:
             import concurrent.futures
@@ -77,7 +77,7 @@ class SimpleWorkflowOrchestrator:
             # 並列実行のための関数定義
             def run_business_evaluation():
                 start_time = time.time()
-                print("  📋 業務・機能要件評価 - 開始")
+                print(f"  📋 {t('workflow.agents.business.start')}")
                 
                 try:
                     # デバッグログ
@@ -222,7 +222,7 @@ class SimpleWorkflowOrchestrator:
             def safe_run_business_evaluation():
                 try:
                     start_time = time.time()
-                    print("  📋 業務・機能要件評価 - 開始")
+                    print(f"  📋 {t('workflow.agents.business.start')}")
                     result = self.business_agent.evaluate_business_requirements(
                         state["system_requirements"],
                         state["deliverables_memory"]
@@ -366,7 +366,7 @@ class SimpleWorkflowOrchestrator:
     
     def _execute_user_interaction_loop(self, state: EstimationState) -> EstimationState:
         """ユーザー対話ループ実行"""
-        print(f"👥 {i18n.t('user_interaction.title')}")
+        print(f"👥 {t('workflow.user_interaction.title')}")
         
         max_iterations = 3
         iteration = 0
@@ -376,16 +376,16 @@ class SimpleWorkflowOrchestrator:
             self._display_current_results(state)
             
             # ユーザー入力待機
-            user_response = input(f"\n{i18n.t('user_interaction.approval_prompt')}").strip().lower()
+            user_response = input(f"\n{t('workflow.user_interaction.approval_prompt')}").strip().lower()
             
             if user_response in ['y', 'yes', '承認']:
                 state["user_approved"] = True
                 state["current_step"] = "approved"
-                print(f"✅ {i18n.t('user_interaction.approved')}")
+                print(f"✅ {t('workflow.user_interaction.approved')}")
                 break
             elif user_response in ['n', 'no', '否認']:
                 state["user_approved"] = False
-                feedback = input(i18n.t('user_interaction.feedback_prompt'))
+                feedback = input(t('workflow.user_interaction.feedback_prompt'))
                 state["user_feedback"] = feedback
                 state["current_step"] = "needs_refinement"
             else:
@@ -399,13 +399,13 @@ class SimpleWorkflowOrchestrator:
                 iteration += 1
             
         if not state.get("user_approved"):
-            print(f"⚠️ {i18n.t('user_interaction.max_iterations')}")
+            print(f"⚠️ {t('workflow.user_interaction.max_iterations')}")
         
         return state
     
     def _execute_refinement(self, state: EstimationState) -> EstimationState:
         """改善実行（修正要求強化版）"""
-        print(f"🔄 {i18n.t('refinement.title')}")
+        print(f"🔄 {t('workflow.refinement.title')}")
         
         try:
             # 履歴に現在の状態を保存
@@ -447,7 +447,7 @@ class SimpleWorkflowOrchestrator:
             # 修正要求による変更を検証
             self._verify_modification_applied(state, feedback)
             
-            print(f"✅ {i18n.t('refinement.completed')}")
+            print(f"✅ {t('workflow.refinement.completed')}")
             return state
             
         except Exception as e:
