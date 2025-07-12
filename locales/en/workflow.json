@@ -46,8 +46,58 @@
     "recalculating": "Recalculating estimate with modification requests..."
   },
   "performance": {
+    "parallel_execution_start": "Running 3 agents in parallel...",
     "parallel_execution_time": "Parallel execution completed - Total time: %{time}s",
     "agent_execution_time": "%{agent} execution time: %{time}s",
     "success_rate": "Evaluation success rate: %{success}/%{total} agents"
+  },
+  "estimation": {
+    "generation_start": "Starting estimation generation",
+    "calculating": "Calculating estimation...",
+    "generation_complete": "Estimation generation completed"
+  },
+  "display": {
+    "detailed_report_title": "Detailed Estimation Results Report",
+    "evaluation_status": "Evaluation Status:",
+    "business_requirements": "Business & Functional Requirements",
+    "quality_requirements": "Quality & Non-Functional Requirements", 
+    "constraints_requirements": "Constraints & External Integration",
+    "estimation_generation": "Estimation Generation",
+    "agent_evaluation_details": "Agent Evaluation Results Details",
+    "business_agent_evaluation": "Business & Functional Requirements Agent Evaluation:",
+    "quality_agent_evaluation": "Quality & Non-Functional Requirements Agent Evaluation:",
+    "constraints_agent_evaluation": "Constraints & External Integration Agent Evaluation:",
+    "estimation_result": "Estimation Results:",
+    "total_effort": "Total Effort: %{days} person-days",
+    "total_amount": "Total Amount: ¥%{amount}",
+    "confidence": "Confidence: %{confidence}",
+    "deliverable_estimates_detail": "All Deliverable Estimates Details:",
+    "evaluation_data": "Evaluation Data",
+    "main_risks": "Main Risk Factors:",
+    "recommendations": "Recommendations:",
+    "technical_assumptions": "Technical Assumptions:",
+    "engineer_level": "Engineer Level: %{level}",
+    "daily_rate": "Daily Rate: ¥%{rate}",
+    "development_stack": "Development Stack: %{stack}",
+    "team_size": "Team Size: %{size} people",
+    "project_duration": "Expected Duration: %{duration} months",
+    "table_headers": {
+      "no": "No.",
+      "deliverable_name": "Deliverable Name",
+      "base_effort": "Base Effort",
+      "final_effort": "Final Effort",
+      "amount": "Amount",
+      "confidence": "Confidence",
+      "total": "Total"
+    },
+    "execution_messages": {
+      "parallel_completed": "Parallel execution completed - Total time: %{time}s",
+      "evaluation_completed": "Parallel evaluation completed"
+    }
+  },
+  "agents_internal": {
+    "execution_attempt": "Execution attempt %{attempt}/%{max}",
+    "execution_success": "✅ Execution successful",
+    "execution_error": "❌ Execution error: %{error}"
   }
 }

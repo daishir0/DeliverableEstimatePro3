@@ -10,6 +10,8 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ValidationError
 import time
 
+from config.i18n_config import t
+
 
 class PydanticAIAgent:
     """PydanticOutputParser対応ベースクラス"""
@@ -77,7 +79,7 @@ class PydanticAIAgent:
         # リトライ実行（指数バックオフ付き）
         for attempt in range(self.max_retries):
             try:
-                print(f"[{self.agent_name}] 実行試行 {attempt + 1}/{self.max_retries}")
+                print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_attempt', attempt=attempt + 1, max=self.max_retries)}")
                 
                 result = chain.invoke({
                     "user_input": user_input,
@@ -94,7 +96,7 @@ class PydanticAIAgent:
                         "model_used": self.model,
                         "execution_time": time.time()
                     }
-                    print(f"[{self.agent_name}] ✅ 実行成功")
+                    print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_success')}")
                     return result_dict
                 else:
                     # 辞書形式の場合

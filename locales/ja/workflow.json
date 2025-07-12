@@ -46,8 +46,58 @@
     "recalculating": "修正要求を反映した見積もり再計算中..."
   },
   "performance": {
+    "parallel_execution_start": "3エージェントを並列実行中...",
     "parallel_execution_time": "並列実行完了 - 総時間: %{time}秒",
     "agent_execution_time": "%{agent}実行時間: %{time}秒",
     "success_rate": "評価成功率: %{success}/%{total} エージェント"
+  },
+  "estimation": {
+    "generation_start": "見積もり生成開始",
+    "calculating": "見積もり計算中...",
+    "generation_complete": "見積もり生成完了"
+  },
+  "display": {
+    "detailed_report_title": "見積もり結果詳細レポート",
+    "evaluation_status": "評価完了状況:",
+    "business_requirements": "業務・機能要件",
+    "quality_requirements": "品質・非機能要件", 
+    "constraints_requirements": "制約・外部連携",
+    "estimation_generation": "見積もり生成",
+    "agent_evaluation_details": "各エージェント評価結果詳細",
+    "business_agent_evaluation": "業務・機能要件エージェント評価:",
+    "quality_agent_evaluation": "品質・非機能要件エージェント評価:",
+    "constraints_agent_evaluation": "制約・外部連携要件エージェント評価:",
+    "estimation_result": "見積もり結果:",
+    "total_effort": "総工数: %{days}人日",
+    "total_amount": "総額: ¥%{amount}",
+    "confidence": "信頼度: %{confidence}",
+    "deliverable_estimates_detail": "全成果物別見積もり詳細:",
+    "evaluation_data": "評価データ",
+    "main_risks": "主要リスク要因:",
+    "recommendations": "推奨事項:",
+    "technical_assumptions": "技術前提条件:",
+    "engineer_level": "エンジニアレベル: %{level}",
+    "daily_rate": "人日単価: ¥%{rate}",
+    "development_stack": "開発スタック: %{stack}",
+    "team_size": "チーム規模: %{size}人",
+    "project_duration": "想定期間: %{duration}ヶ月",
+    "table_headers": {
+      "no": "No.",
+      "deliverable_name": "成果物名",
+      "base_effort": "基礎工数",
+      "final_effort": "最終工数",
+      "amount": "金額",
+      "confidence": "信頼度",
+      "total": "合計"
+    },
+    "execution_messages": {
+      "parallel_completed": "並列実行完了 - 総時間: %{time}秒",
+      "evaluation_completed": "並列評価完了"
+    }
+  },
+  "agents_internal": {
+    "execution_attempt": "実行試行 %{attempt}/%{max}",
+    "execution_success": "✅ 実行成功",
+    "execution_error": "❌ 実行エラー: %{error}"
   }
 }

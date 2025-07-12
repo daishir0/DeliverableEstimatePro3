@@ -114,7 +114,7 @@ class SimpleWorkflowOrchestrator:
                     )
                     
                     end_time = time.time()
-                    print(f"  📋 業務・機能要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                    print(f"  📋 {t('workflow.agents.business.complete')} ({end_time - start_time:.2f}秒)")
                     return ("business", result)
                 except Exception as e:
                     if DEBUG_MODE:
@@ -124,28 +124,28 @@ class SimpleWorkflowOrchestrator:
             
             def run_quality_evaluation():
                 start_time = time.time()
-                print("  🎯 品質・非機能要件評価 - 開始")
+                print(f"  🎯 {t('workflow.agents.quality.start')}")
                 result = self.quality_agent.evaluate_quality_requirements(
                     state["system_requirements"],
                     state["deliverables_memory"]
                 )
                 end_time = time.time()
-                print(f"  🎯 品質・非機能要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                print(f"  🎯 {t('workflow.agents.quality.complete')} ({end_time - start_time:.2f}秒)")
                 return ("quality", result)
             
             def run_constraints_evaluation():
                 start_time = time.time()
-                print("  🔒 制約・外部連携要件評価 - 開始")
+                print(f"  🔒 {t('workflow.agents.constraints.start')}")
                 result = self.constraints_agent.evaluate_constraints(
                     state["system_requirements"],
                     state["deliverables_memory"]
                 )
                 end_time = time.time()
-                print(f"  🔒 制約・外部連携要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                print(f"  🔒 {t('workflow.agents.constraints.complete')} ({end_time - start_time:.2f}秒)")
                 return ("constraints", result)
             
             # 真の並列実行
-            print("⚡ 3エージェントを並列実行中...")
+            print(f"⚡ {t('workflow.performance.parallel_execution_start')}")
             parallel_start_time = time.time()
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -177,7 +177,7 @@ class SimpleWorkflowOrchestrator:
                                         debug_log(f"エラーが発生したエージェント: {agent_types[i]}")
             
             parallel_end_time = time.time()
-            print(f"⚡ 並列実行完了 - 総時間: {parallel_end_time - parallel_start_time:.2f}秒")
+            print(f"⚡ {t('workflow.display.execution_messages.parallel_completed', time=f'{parallel_end_time - parallel_start_time:.2f}')}")
             
             # 結果を状態に反映
             updated_state = state.copy()
@@ -200,7 +200,7 @@ class SimpleWorkflowOrchestrator:
             updated_state["iteration_count"] = state["iteration_count"] + 1
             updated_state["current_step"] = "parallel_evaluation_complete"
             
-            print("✅ 並列評価完了")
+            print(f"✅ {t('workflow.display.execution_messages.evaluation_completed')}")
             return updated_state
             
         except Exception as e:
@@ -228,7 +228,7 @@ class SimpleWorkflowOrchestrator:
                         state["deliverables_memory"]
                     )
                     end_time = time.time()
-                    print(f"  📋 業務・機能要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                    print(f"  📋 {t('workflow.agents.business.complete')} ({end_time - start_time:.2f}秒)")
                     return ("business", result)
                 except Exception as e:
                     print(f"  📋 業務・機能要件評価 - エラー: {str(e)}")
@@ -237,13 +237,13 @@ class SimpleWorkflowOrchestrator:
             def safe_run_quality_evaluation():
                 try:
                     start_time = time.time()
-                    print("  🎯 品質・非機能要件評価 - 開始")
+                    print(f"  🎯 {t('workflow.agents.quality.start')}")
                     result = self.quality_agent.evaluate_quality_requirements(
                         state["system_requirements"],
                         state["deliverables_memory"]
                     )
                     end_time = time.time()
-                    print(f"  🎯 品質・非機能要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                    print(f"  🎯 {t('workflow.agents.quality.complete')} ({end_time - start_time:.2f}秒)")
                     return ("quality", result)
                 except Exception as e:
                     print(f"  🎯 品質・非機能要件評価 - エラー: {str(e)}")
@@ -252,13 +252,13 @@ class SimpleWorkflowOrchestrator:
             def safe_run_constraints_evaluation():
                 try:
                     start_time = time.time()
-                    print("  🔒 制約・外部連携要件評価 - 開始")
+                    print(f"  🔒 {t('workflow.agents.constraints.start')}")
                     result = self.constraints_agent.evaluate_constraints(
                         state["system_requirements"],
                         state["deliverables_memory"]
                     )
                     end_time = time.time()
-                    print(f"  🔒 制約・外部連携要件評価 - 完了 ({end_time - start_time:.2f}秒)")
+                    print(f"  🔒 {t('workflow.agents.constraints.complete')} ({end_time - start_time:.2f}秒)")
                     return ("constraints", result)
                 except Exception as e:
                     print(f"  🔒 制約・外部連携要件評価 - エラー: {str(e)}")
@@ -294,7 +294,7 @@ class SimpleWorkflowOrchestrator:
                         results[agent_type_expected] = {"success": False, "error": str(e)}
             
             parallel_end_time = time.time()
-            print(f"⚡ 並列実行完了 - 総時間: {parallel_end_time - parallel_start_time:.2f}秒")
+            print(f"⚡ {t('workflow.display.execution_messages.parallel_completed', time=f'{parallel_end_time - parallel_start_time:.2f}')}")
             
             # 結果を状態に反映
             updated_state = state.copy()
@@ -320,7 +320,7 @@ class SimpleWorkflowOrchestrator:
             success_count = sum(1 for result in results.values() if result.get("success"))
             print(f"📊 評価成功率: {success_count}/3 エージェント")
             
-            print("✅ 並列評価完了")
+            print(f"✅ {t('workflow.display.execution_messages.evaluation_completed')}")
             return updated_state
             
         except Exception as e:
@@ -330,7 +330,7 @@ class SimpleWorkflowOrchestrator:
     
     def _execute_estimation_generation(self, state: EstimationState) -> EstimationState:
         """見積もり生成実行"""
-        print("💰 見積もり生成開始")
+        print(f"💰 {t('workflow.estimation.generation_start')}")
         
         if not is_evaluation_complete(state):
             error_msg = "並列評価が完了していません"
@@ -345,7 +345,7 @@ class SimpleWorkflowOrchestrator:
         }
         
         try:
-            print("  🧮 見積もり計算中...")
+            print(f"  🧮 {t('workflow.estimation.calculating')}")
             result = self.estimation_agent.generate_estimate(
                 state["deliverables_memory"],
                 state["system_requirements"],
@@ -357,7 +357,7 @@ class SimpleWorkflowOrchestrator:
                 state = update_evaluation_result(state, "EstimationAgent", result)
             
             state["current_step"] = "estimation_complete"
-            print("✅ 見積もり生成完了")
+            print(f"✅ {t('workflow.estimation.generation_complete')}")
             return state
             
         except Exception as e:
@@ -480,16 +480,16 @@ class SimpleWorkflowOrchestrator:
     def _display_current_results(self, state: EstimationState):
         """現在の結果表示 - 詳細版"""
         print("\n" + "="*80)
-        print("📋 見積もり結果詳細レポート")
+        print(f"📋 {t('workflow.display.detailed_report_title')}")
         print("="*80)
         
         # 1. 評価サマリー
         summary = get_evaluation_summary(state)
-        print(f"📊 評価完了状況:")
-        print(f"  業務・機能要件: {'✅' if summary['business_complete'] else '❌'}")
-        print(f"  品質・非機能要件: {'✅' if summary['quality_complete'] else '❌'}")
-        print(f"  制約・外部連携: {'✅' if summary['constraints_complete'] else '❌'}")
-        print(f"  見積もり生成: {'✅' if summary['estimation_complete'] else '❌'}")
+        print(f"📊 {t('workflow.display.evaluation_status')}")
+        print(f"  {t('workflow.display.business_requirements')}: {'✅' if summary['business_complete'] else '❌'}")
+        print(f"  {t('workflow.display.quality_requirements')}: {'✅' if summary['quality_complete'] else '❌'}")
+        print(f"  {t('workflow.display.constraints_requirements')}: {'✅' if summary['constraints_complete'] else '❌'}")
+        print(f"  {t('workflow.display.estimation_generation')}: {'✅' if summary['estimation_complete'] else '❌'}")
         
         # 2. 各エージェント評価結果詳細
         self._display_agent_evaluations(state)
@@ -497,10 +497,10 @@ class SimpleWorkflowOrchestrator:
         # 3. 見積もり結果
         if state.get("estimation_result") and state["estimation_result"].get("success"):
             est_result = state["estimation_result"]["estimation_result"]
-            print(f"\n💰 見積もり結果:")
-            print(f"  総工数: {est_result['financial_summary']['total_effort_days']}人日")
-            print(f"  総額: ¥{est_result['financial_summary']['total_jpy']:,}")
-            print(f"  信頼度: {est_result['overall_confidence']}")
+            print(f"\n💰 {t('workflow.display.estimation_result')}")
+            print(f"  {t('workflow.display.total_effort', days=est_result['financial_summary']['total_effort_days'])}")
+            print(f"  {t('workflow.display.total_amount', amount=est_result['financial_summary']['total_jpy'])}")
+            print(f"  {t('workflow.display.confidence', confidence=est_result['overall_confidence'])}")
             
             # 4. 全成果物別詳細（省略なし）
             self._display_all_deliverable_estimates(est_result)
@@ -519,21 +519,21 @@ class SimpleWorkflowOrchestrator:
     
     def _display_agent_evaluations(self, state: EstimationState):
         """各エージェントの評価結果詳細表示"""
-        print(f"\n🤖 各エージェント評価結果詳細")
+        print(f"\n🤖 {t('workflow.display.agent_evaluation_details')}")
         print("-" * 60)
         
         # 業務・機能要件エージェント評価
         if state.get("business_evaluation"):
             business_eval = state["business_evaluation"]
             if business_eval.get("success"):
-                print(f"📋 業務・機能要件エージェント評価:")
+                print(f"📋 {t('workflow.display.business_agent_evaluation')}")
                 if isinstance(business_eval, dict) and "overall_score" in business_eval:
                     print(f"  総合スコア: {business_eval.get('overall_score', 'N/A')}/100")
                     print(f"  業務目的明確性: {business_eval.get('business_purpose', {}).get('clarity_score', 'N/A')}/100")
                     print(f"  機能要件完全性: {business_eval.get('functional_requirements', {}).get('completeness_score', 'N/A')}/100")
                     print(f"  主要リスク: {', '.join(business_eval.get('risk_factors', [])[:3])}")
                 else:
-                    print(f"  評価データ: {str(business_eval)[:200]}...")
+                    print(f"  {t('workflow.display.evaluation_data')}: {str(business_eval)[:200]}...")
             else:
                 print(f"📋 業務・機能要件エージェント: エラー - {business_eval.get('error', '不明')}")
         
@@ -541,14 +541,14 @@ class SimpleWorkflowOrchestrator:
         if state.get("quality_evaluation"):
             quality_eval = state["quality_evaluation"]
             if quality_eval.get("success"):
-                print(f"\n🎯 品質・非機能要件エージェント評価:")
+                print(f"\n🎯 {t('workflow.display.quality_agent_evaluation')}")
                 if isinstance(quality_eval, dict) and "overall_score" in quality_eval:
                     print(f"  総合スコア: {quality_eval.get('overall_score', 'N/A')}/100")
                     print(f"  パフォーマンス要件: {quality_eval.get('performance_requirements', {}).get('definition_score', 'N/A')}/100")
                     print(f"  セキュリティ要件: {quality_eval.get('security_requirements', {}).get('completeness_score', 'N/A')}/100")
                     print(f"  工数影響度: +{quality_eval.get('total_effort_impact', 'N/A')}%")
                 else:
-                    print(f"  評価データ: {str(quality_eval)[:200]}...")
+                    print(f"  {t('workflow.display.evaluation_data')}: {str(quality_eval)[:200]}...")
             else:
                 print(f"🎯 品質・非機能要件エージェント: エラー - {quality_eval.get('error', '不明')}")
         
@@ -556,22 +556,22 @@ class SimpleWorkflowOrchestrator:
         if state.get("constraints_evaluation"):
             constraints_eval = state["constraints_evaluation"]
             if constraints_eval.get("success"):
-                print(f"\n🔒 制約・外部連携要件エージェント評価:")
+                print(f"\n🔒 {t('workflow.display.constraints_agent_evaluation')}")
                 if isinstance(constraints_eval, dict) and "overall_score" in constraints_eval:
                     print(f"  総合スコア: {constraints_eval.get('overall_score', 'N/A')}/100")
                     print(f"  技術制約明確性: {constraints_eval.get('technical_constraints', {}).get('clarity_score', 'N/A')}/100")
                     print(f"  外部連携仕様: {constraints_eval.get('external_integrations', {}).get('specification_score', 'N/A')}/100")
                     print(f"  実現可能性リスク: {', '.join(constraints_eval.get('feasibility_risks', [])[:3])}")
                 else:
-                    print(f"  評価データ: {str(constraints_eval)[:200]}...")
+                    print(f"  {t('workflow.display.evaluation_data')}: {str(constraints_eval)[:200]}...")
             else:
                 print(f"🔒 制約・外部連携要件エージェント: エラー - {constraints_eval.get('error', '不明')}")
     
     def _display_all_deliverable_estimates(self, est_result: Dict[str, Any]):
         """全成果物別見積もり表示（省略なし）"""
-        print(f"\n📋 全成果物別見積もり詳細:")
+        print(f"\n📋 {t('workflow.display.deliverable_estimates_detail')}")
         print("-" * 80)
-        print(f"{'No.':<4} {'成果物名':<25} {'基礎工数':<8} {'最終工数':<8} {'金額':<12} {'信頼度':<6}")
+        print(f"{t('workflow.display.table_headers.no'):<4} {t('workflow.display.table_headers.deliverable_name'):<25} {t('workflow.display.table_headers.base_effort'):<8} {t('workflow.display.table_headers.final_effort'):<8} {t('workflow.display.table_headers.amount'):<12} {t('workflow.display.table_headers.confidence'):<6}")
         print("-" * 80)
         
         deliverable_estimates = est_result.get('deliverable_estimates', [])
@@ -586,27 +586,27 @@ class SimpleWorkflowOrchestrator:
         
         print("-" * 80)
         financial_summary = est_result.get('financial_summary', {})
-        print(f"{'合計':<4} {'':<25} {'':<8} {financial_summary.get('total_effort_days', 0):<8.1f} ¥{financial_summary.get('total_jpy', 0):<11,}")
+        print(f"{t('workflow.display.table_headers.total'):<4} {'':<25} {'':<8} {financial_summary.get('total_effort_days', 0):<8.1f} ¥{financial_summary.get('total_jpy', 0):<11,}")
     
     def _display_risks_and_recommendations(self, est_result: Dict[str, Any], state: EstimationState = None):
         """主要リスクと推奨事項表示"""
-        print(f"\n⚠️ 主要リスク要因:")
+        print(f"\n⚠️ {t('workflow.display.main_risks')}")
         key_risks = est_result.get('key_risks', [])
         for i, risk in enumerate(key_risks, 1):
             print(f"  {i}. {risk}")
         
-        print(f"\n💡 推奨事項:")
+        print(f"\n💡 {t('workflow.display.recommendations')}")
         recommendations = est_result.get('recommendations', [])
         for i, rec in enumerate(recommendations, 1):
             print(f"  {i}. {rec}")
         
-        print(f"\n🔧 技術前提条件:")
+        print(f"\n🔧 {t('workflow.display.technical_assumptions')}")
         tech_assumptions = est_result.get('technical_assumptions', {})
-        print(f"  エンジニアレベル: {tech_assumptions.get('engineer_level', 'N/A')}")
-        print(f"  人日単価: ¥{tech_assumptions.get('daily_rate_jpy', 'N/A'):,}")
-        print(f"  開発スタック: {tech_assumptions.get('development_stack', 'N/A')}")
-        print(f"  チーム規模: {tech_assumptions.get('team_size', 'N/A')}人")
-        print(f"  想定期間: {tech_assumptions.get('project_duration_months', 'N/A')}ヶ月")
+        print(f"  {t('workflow.display.engineer_level', level=tech_assumptions.get('engineer_level', 'N/A'))}")
+        print(f"  {t('workflow.display.daily_rate', rate=tech_assumptions.get('daily_rate_jpy', 'N/A'))}")
+        print(f"  {t('workflow.display.development_stack', stack=tech_assumptions.get('development_stack', 'N/A'))}")
+        print(f"  {t('workflow.display.team_size', size=tech_assumptions.get('team_size', 'N/A'))}")
+        print(f"  {t('workflow.display.project_duration', duration=tech_assumptions.get('project_duration_months', 'N/A'))}")
         
         # 履歴表示を追加（stateがある場合のみ）
         if state is not None:
