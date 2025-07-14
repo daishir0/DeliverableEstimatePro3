@@ -1,266 +1,199 @@
 """
-LangGraph状態管理 - 4エージェント用TypedDict
+State Manager for DeliverableEstimatePro v3
+Manages workflow state, agent results, and iteration history
 """
 
-from typing import TypedDict, List, Dict, Any, Optional
-from typing_extensions import Annotated
-import operator
+from typing import Dict, Any, List
+import json
+from datetime import datetime
 
+# Type definition for estimation state
+EstimationState = Dict[str, Any]
 
-class DeliverableItem(TypedDict):
-    """成果物項目"""
-    name: str
-    description: str
-    category: Optional[str]
-    complexity_level: Optional[str]
+def create_initial_state(excel_input: str, system_requirements: str, deliverables: List[Dict[str, Any]]) -> EstimationState:
+    """Create initial workflow state"""
+    return {
+        "excel_input": excel_input,
+        "system_requirements": system_requirements,
+        "deliverables_memory": deliverables,
+        "current_step": "initialized",
+        "iteration_count": 0,
+        "session_logs": [],
+        "errors": [],
+        "warnings": [],
+        "user_approved": False,
+        "user_feedback": "",
+        "iteration_history": [],
+        
+        # Agent evaluation results
+        "business_evaluation": None,
+        "quality_evaluation": None,
+        "constraints_evaluation": None,
+        "estimation_result": None,
+        
+        # Previous evaluation results (for refinement)
+        "previous_evaluation_results": {}
+    }
 
-
-class IterationHistory(TypedDict):
-    """反復履歴データ"""
-    iteration_number: int
-    timestamp: str
-    user_feedback: str
-    business_evaluation: Optional[Dict[str, Any]]
-    quality_evaluation: Optional[Dict[str, Any]]
-    constraints_evaluation: Optional[Dict[str, Any]]
-    estimation_result: Optional[Dict[str, Any]]
-    technical_assumptions: Optional[Dict[str, Any]]
-    changes_summary: List[str]
-
-
-class EstimationState(TypedDict):
-    """4エージェント用LangGraph状態"""
-    
-    # 入力データ
-    excel_input: str
-    system_requirements: str
-    deliverables_memory: List[DeliverableItem]
-    
-    # エージェント実行結果（現在の）
-    business_evaluation: Optional[Dict[str, Any]]
-    quality_evaluation: Optional[Dict[str, Any]]
-    constraints_evaluation: Optional[Dict[str, Any]]
-    estimation_result: Optional[Dict[str, Any]]
-    
-    # プロセス制御
-    iteration_count: int
-    current_step: str
-    user_approved: Optional[bool]
-    user_feedback: Optional[str]
-    
-    # 履歴管理（新規追加）
-    iteration_history: Annotated[List[IterationHistory], operator.add]
-    previous_evaluation_results: Optional[Dict[str, Any]]
-    
-    # 出力データ
-    final_excel_output: Optional[str]
-    session_logs: Annotated[List[Dict[str, Any]], operator.add]
-    
-    # エラーハンドリング
-    errors: Annotated[List[str], operator.add]
-    warnings: Annotated[List[str], operator.add]
-
-
-def create_initial_state(excel_input: str, 
-                        system_requirements: str, 
-                        deliverables: List[DeliverableItem]) -> EstimationState:
-    """初期状態の作成"""
-    return EstimationState(
-        excel_input=excel_input,
-        system_requirements=system_requirements,
-        deliverables_memory=deliverables,
-        business_evaluation=None,
-        quality_evaluation=None,
-        constraints_evaluation=None,
-        estimation_result=None,
-        iteration_count=0,
-        current_step="initialization",
-        user_approved=None,
-        user_feedback=None,
-        iteration_history=[],
-        previous_evaluation_results=None,
-        final_excel_output=None,
-        session_logs=[],
-        errors=[],
-        warnings=[]
-    )
-
-
-def log_agent_execution(state: EstimationState, 
-                       agent_name: str, 
-                       result: Dict[str, Any]) -> EstimationState:
-    """エージェント実行ログの記録"""
-    import time
-    
+def log_agent_execution(state: EstimationState, agent_name: str, result: Dict[str, Any]) -> EstimationState:
+    """Log agent execution results to session logs"""
     log_entry = {
-        "timestamp": time.time(),
+        "timestamp": datetime.now().isoformat(),
         "agent_name": agent_name,
-        "iteration": state["iteration_count"],
         "success": result.get("success", False),
-        "result_summary": {
-            key: str(value)[:100] + "..." if len(str(value)) > 100 else str(value)
-            for key, value in result.items()
-            if key not in ["_agent_metadata"]
-        }
+        "execution_time": result.get("_agent_metadata", {}).get("execution_time", 0),
+        "attempt_number": result.get("_agent_metadata", {}).get("attempt_number", 1)
     }
     
-    updated_state = state.copy()
-    updated_state["session_logs"] = state["session_logs"] + [log_entry]
+    if not result.get("success"):
+        log_entry["error"] = result.get("error", "Unknown error")
+        # Add to errors list
+        state["errors"] = state.get("errors", []) + [f"{agent_name}: {result.get('error', 'Unknown error')}"]
     
-    if not result.get("success", False):
-        error_msg = result.get("error", f"{agent_name}で未知のエラーが発生")
-        updated_state["errors"] = state["errors"] + [f"{agent_name}: {error_msg}"]
-    
-    return updated_state
+    state["session_logs"] = state.get("session_logs", []) + [log_entry]
+    return state
 
-
-def update_evaluation_result(state: EstimationState, 
-                           agent_name: str, 
-                           evaluation_result: Dict[str, Any]) -> EstimationState:
-    """評価結果の状態更新"""
-    updated_state = state.copy()
+def update_evaluation_result(state: EstimationState, agent_name: str, result: Dict[str, Any]) -> EstimationState:
+    """Update evaluation results in state based on agent type"""
+    if not result.get("success"):
+        return state
     
     if agent_name == "BusinessRequirementsAgent":
-        updated_state["business_evaluation"] = evaluation_result
+        state["business_evaluation"] = result
     elif agent_name == "QualityRequirementsAgent":
-        updated_state["quality_evaluation"] = evaluation_result
+        state["quality_evaluation"] = result
     elif agent_name == "ConstraintsAgent":
-        updated_state["constraints_evaluation"] = evaluation_result
+        state["constraints_evaluation"] = result
     elif agent_name == "EstimationAgent":
-        updated_state["estimation_result"] = evaluation_result
+        state["estimation_result"] = result
     
-    return updated_state
-
+    return state
 
 def is_evaluation_complete(state: EstimationState) -> bool:
-    """すべての評価が完了しているかチェック"""
-    return all([
-        state.get("business_evaluation") is not None,
-        state.get("quality_evaluation") is not None,
-        state.get("constraints_evaluation") is not None
-    ])
+    """Check if all required evaluations are complete"""
+    required_evaluations = ["business_evaluation", "quality_evaluation", "constraints_evaluation"]
+    
+    for eval_key in required_evaluations:
+        if not state.get(eval_key) or not state[eval_key].get("success"):
+            return False
+    
+    return True
 
+def get_evaluation_summary(state: EstimationState) -> Dict[str, bool]:
+    """Get summary of evaluation completion status"""
+    return {
+        "business_complete": bool(state.get("business_evaluation", {}).get("success")),
+        "quality_complete": bool(state.get("quality_evaluation", {}).get("success")),
+        "constraints_complete": bool(state.get("constraints_evaluation", {}).get("success")),
+        "estimation_complete": bool(state.get("estimation_result", {}).get("success"))
+    }
 
 def save_iteration_to_history(state: EstimationState, user_feedback: str = "") -> EstimationState:
-    """現在の反復を履歴に保存"""
-    import datetime
-    
-    # 技術前提条件を抽出
-    tech_assumptions = None
-    if state.get("estimation_result") and state["estimation_result"].get("success"):
-        est_result = state["estimation_result"].get("estimation_result", {})
-        tech_assumptions = est_result.get("technical_assumptions", {})
-    
-    # 変更サマリーを生成（前回との比較）
-    changes_summary = generate_changes_summary(state)
-    
-    # 履歴エントリを作成
-    history_entry = IterationHistory(
-        iteration_number=state.get("iteration_count", 0),
-        timestamp=datetime.datetime.now().isoformat(),
-        user_feedback=user_feedback,
-        business_evaluation=state.get("business_evaluation"),
-        quality_evaluation=state.get("quality_evaluation"),
-        constraints_evaluation=state.get("constraints_evaluation"),
-        estimation_result=state.get("estimation_result"),
-        technical_assumptions=tech_assumptions,
-        changes_summary=changes_summary
-    )
-    
-    # 状態を更新
-    updated_state = state.copy()
-    updated_state["iteration_history"] = state.get("iteration_history", []) + [history_entry]
-    updated_state["previous_evaluation_results"] = {
+    """Save current iteration results to history for future reference"""
+    iteration_entry = {
+        "iteration_number": state.get("iteration_count", 0) + 1,
+        "timestamp": datetime.now().isoformat(),
+        "user_feedback": user_feedback,
         "business_evaluation": state.get("business_evaluation"),
         "quality_evaluation": state.get("quality_evaluation"),
         "constraints_evaluation": state.get("constraints_evaluation"),
-        "estimation_result": state.get("estimation_result")
+        "estimation_result": state.get("estimation_result"),
+        "session_logs": state.get("session_logs", []).copy(),
+        "errors": state.get("errors", []).copy(),
+        "warnings": state.get("warnings", []).copy()
     }
     
-    return updated_state
-
-
-def generate_changes_summary(state: EstimationState) -> List[str]:
-    """前回との変更サマリーを生成"""
-    changes = []
-    previous = state.get("previous_evaluation_results")
-    
-    if not previous:
-        changes.append("初回見積もり生成")
-        return changes
-    
-    # 見積もり結果の比較
-    current_est = state.get("estimation_result")
-    previous_est = previous.get("estimation_result")
-    
-    if current_est and previous_est:
-        current_total = current_est.get("estimation_result", {}).get("financial_summary", {}).get("total_effort_days", 0)
-        previous_total = previous_est.get("estimation_result", {}).get("financial_summary", {}).get("total_effort_days", 0)
+    # Add technical assumptions if available
+    if state.get("estimation_result", {}).get("success"):
+        est_result = state["estimation_result"].get("estimation_result", {})
+        iteration_entry["technical_assumptions"] = est_result.get("technical_assumptions", {})
         
-        if current_total != previous_total:
-            diff = current_total - previous_total
-            if diff > 0:
-                changes.append(f"総工数増加: +{diff:.1f}人日")
-            else:
-                changes.append(f"総工数減少: {diff:.1f}人日")
-    
-    # 評価スコアの比較
-    for eval_type in ["business_evaluation", "quality_evaluation", "constraints_evaluation"]:
-        current_eval = state.get(eval_type)
-        previous_eval = previous.get(eval_type)
+        # Extract summary of changes
+        changes_summary = []
+        if user_feedback:
+            if "response" in user_feedback.lower() or "performance" in user_feedback.lower():
+                changes_summary.append("Performance requirements updated")
+            if "library" in user_feedback.lower() or "platform" in user_feedback.lower():
+                changes_summary.append("Technology stack updated")
+            if "security" in user_feedback.lower():
+                changes_summary.append("Security requirements updated")
         
-        if current_eval and previous_eval:
-            current_score = extract_overall_score(current_eval)
-            previous_score = extract_overall_score(previous_eval)
-            
-            if current_score and previous_score and current_score != previous_score:
-                eval_name = {"business_evaluation": "業務要件", "quality_evaluation": "品質要件", "constraints_evaluation": "制約要件"}[eval_type]
-                diff = current_score - previous_score
-                if diff > 0:
-                    changes.append(f"{eval_name}スコア向上: +{diff}点")
-                else:
-                    changes.append(f"{eval_name}スコア低下: {diff}点")
+        iteration_entry["changes_summary"] = changes_summary
     
-    if not changes:
-        changes.append("評価結果に変更なし")
+    state["iteration_history"] = state.get("iteration_history", []) + [iteration_entry]
     
-    return changes
-
-
-def extract_overall_score(evaluation_result: Dict[str, Any]) -> Optional[int]:
-    """評価結果から総合スコアを抽出"""
-    if evaluation_result.get("success"):
-        # 各エージェントの評価結果構造に応じて調整
-        for key in ["business_evaluation", "quality_evaluation", "constraints_evaluation"]:
-            if key in evaluation_result:
-                return evaluation_result[key].get("overall_score")
-        
-        # 直接overall_scoreがある場合
-        if "overall_score" in evaluation_result:
-            return evaluation_result["overall_score"]
+    # Update previous evaluation results for next iteration
+    state["previous_evaluation_results"] = {
+        "business_evaluation": state.get("business_evaluation"),
+        "quality_evaluation": state.get("quality_evaluation"),
+        "constraints_evaluation": state.get("constraints_evaluation")
+    }
     
-    return None
+    return state
 
+def add_warning(state: EstimationState, warning_message: str) -> EstimationState:
+    """Add warning message to state"""
+    state["warnings"] = state.get("warnings", []) + [warning_message]
+    return state
 
-def get_evaluation_summary(state: EstimationState) -> Dict[str, Any]:
-    """評価結果のサマリー取得"""
-    summary = {
-        "business_complete": state.get("business_evaluation") is not None,
-        "quality_complete": state.get("quality_evaluation") is not None,
-        "constraints_complete": state.get("constraints_evaluation") is not None,
-        "estimation_complete": state.get("estimation_result") is not None,
+def add_error(state: EstimationState, error_message: str) -> EstimationState:
+    """Add error message to state"""
+    state["errors"] = state.get("errors", []) + [error_message]
+    return state
+
+def reset_user_feedback(state: EstimationState) -> EstimationState:
+    """Reset user feedback after processing"""
+    state["user_feedback"] = ""
+    state["user_approved"] = False
+    return state
+
+def get_current_iteration_summary(state: EstimationState) -> Dict[str, Any]:
+    """Get summary of current iteration for display"""
+    return {
+        "iteration_count": state.get("iteration_count", 0),
+        "current_step": state.get("current_step", "unknown"),
+        "evaluations_complete": is_evaluation_complete(state),
         "total_errors": len(state.get("errors", [])),
         "total_warnings": len(state.get("warnings", [])),
-        "iteration_count": state.get("iteration_count", 0)
+        "user_approved": state.get("user_approved", False),
+        "has_estimation_result": bool(state.get("estimation_result", {}).get("success"))
     }
-    
-    if state.get("business_evaluation"):
-        summary["business_score"] = state["business_evaluation"].get("business_evaluation", {}).get("overall_score", 0)
-    
-    if state.get("quality_evaluation"):
-        summary["quality_score"] = state["quality_evaluation"].get("quality_evaluation", {}).get("overall_score", 0)
-    
-    if state.get("constraints_evaluation"):
-        summary["constraints_score"] = state["constraints_evaluation"].get("constraints_evaluation", {}).get("overall_score", 0)
-    
-    return summary
+
+def export_state_to_json(state: EstimationState, output_path: str) -> bool:
+    """Export current state to JSON file for debugging/analysis"""
+    try:
+        # Create a clean copy without circular references
+        export_data = {
+            "metadata": {
+                "export_timestamp": datetime.now().isoformat(),
+                "iteration_count": state.get("iteration_count", 0),
+                "current_step": state.get("current_step", "unknown")
+            },
+            "inputs": {
+                "excel_input": state.get("excel_input"),
+                "system_requirements": state.get("system_requirements"),
+                "deliverables_count": len(state.get("deliverables_memory", []))
+            },
+            "evaluation_results": {
+                "business_evaluation": state.get("business_evaluation"),
+                "quality_evaluation": state.get("quality_evaluation"),
+                "constraints_evaluation": state.get("constraints_evaluation"),
+                "estimation_result": state.get("estimation_result")
+            },
+            "session_info": {
+                "session_logs": state.get("session_logs", []),
+                "errors": state.get("errors", []),
+                "warnings": state.get("warnings", []),
+                "user_approved": state.get("user_approved", False),
+                "user_feedback": state.get("user_feedback", "")
+            },
+            "iteration_history": state.get("iteration_history", [])
+        }
+        
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(export_data, f, ensure_ascii=False, indent=2)
+        
+        return True
+    except Exception as e:
+        print(f"Error exporting state to JSON: {e}")
+        return False

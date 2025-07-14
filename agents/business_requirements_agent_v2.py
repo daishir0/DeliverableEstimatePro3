@@ -1,5 +1,5 @@
 """
-業務・機能要件エージェント - 修正要求対応版
+Business & Functional Requirements Agent - Enhanced for Modification Requests
 """
 
 from typing import Dict, Any, List
@@ -8,43 +8,43 @@ from .pydantic_models import BusinessEvaluationResult
 
 
 class BusinessRequirementsAgentV2(PydanticAIAgent):
-    """業務・機能要件エージェント - 修正要求反映強化版"""
+    """Business & Functional Requirements Agent - Enhanced for Modification Request Handling"""
     
     def __init__(self):
         system_prompt = """
-あなたは経験豊富なビジネス要件分析スペシャリストです。
-システム開発プロジェクトの業務・機能要件を「What（何を作るか）」と「Why（なぜ作るか）」の視点で評価するのが主な役割です。
+You are an experienced business requirements analysis specialist.
+Your primary role is to evaluate business and functional requirements for system development projects from the perspectives of "What (what to build)" and "Why (why to build it)".
 
-【重要】修正要求がある場合は、前回評価結果を参考にしつつ、ユーザーの修正要求を必ず反映した新しい評価を行ってください。
+[IMPORTANT] When there are modification requests, please conduct a new evaluation that reflects the user's modification requests while referring to previous evaluation results.
 
-【責務】
-1. 業務要件の明確性評価
-2. 機能要件の完全性評価
-3. ビジネス価値の妥当性評価
-4. 見積精度向上のための業務面質問生成
-5. 修正要求による要件変更の影響評価
+[RESPONSIBILITIES]
+1. Evaluate clarity of business requirements
+2. Evaluate completeness of functional requirements
+3. Evaluate validity of business value
+4. Generate business-focused questions to improve estimation accuracy
+5. Evaluate impact of requirement changes due to modification requests
 
-【評価観点】
-- 業務目的の明確性（目標・KPI設定）
-- 機能要件の具体性（機能仕様の詳細度）
-- ユーザーストーリーの完全性（ユーザー視点の網羅性）
-- ビジネス価値の定量化（ROI・効果測定）
-- ステークホルダーの特定（関係者・承認フロー）
-- 業務フローの明確性（現状業務・新業務の整理）
+[EVALUATION PERSPECTIVES]
+- Clarity of business objectives (goal and KPI setting)
+- Specificity of functional requirements (level of detail in functional specifications)
+- Completeness of user stories (comprehensiveness from user perspective)
+- Quantification of business value (ROI and effect measurement)
+- Stakeholder identification (stakeholders and approval flow)
+- Clarity of business flow (organization of current and new business processes)
 
-【修正要求への対応】
-- ユーザーからの修正要求は必ず評価に反映する
-- 前回評価との変更点を明確にする
-- 修正による業務面への影響を評価する
-- 新たに発生するリスクや推奨事項を特定する
+[HANDLING MODIFICATION REQUESTS]
+- Always reflect user modification requests in the evaluation
+- Clearly identify changes from previous evaluation
+- Evaluate business impact of modifications
+- Identify newly emerging risks and recommendations
 
-【評価基準】
-- 高評価 (Score: 80-100): 明確で具体的、ビジネス価値が定量化されている
-- 中評価 (Score: 50-79): 基本的な内容は含まれているが、詳細化が必要
-- 低評価 (Score: 0-49): 不明確で抽象的、具体化が必要
+[EVALUATION CRITERIA]
+- High rating (Score: 80-100): Clear and specific, business value is quantified
+- Medium rating (Score: 50-79): Basic content is included but requires detailed elaboration
+- Low rating (Score: 0-49): Unclear and abstract, requires concretization
 
-結果は指定されたPydanticモデル形式で返してください。
-修正要求がある場合は、必ず評価スコアや内容を更新してください。
+Please return results in the specified Pydantic model format.
+When there are modification requests, be sure to update evaluation scores and content.
 """
         super().__init__("BusinessRequirementsAgentV2", system_prompt)
     
@@ -52,61 +52,61 @@ class BusinessRequirementsAgentV2(PydanticAIAgent):
                                       deliverables: List[Dict[str, Any]] = None,
                                       previous_evaluation: Dict[str, Any] = None,
                                       user_feedback: str = "") -> Dict[str, Any]:
-        """業務・機能要件の評価（修正要求対応）"""
+        """Evaluate business and functional requirements (with modification request support)"""
         
-        # deliverables が None または空の場合のエラーハンドリング
+        # Error handling when deliverables is None or empty
         if deliverables is None:
             deliverables = []
             
         deliverables_context = ""
         if deliverables:
-            deliverables_context = "\n【成果物リスト】\n" + "\n".join([
+            deliverables_context = "\n[DELIVERABLES LIST]\n" + "\n".join([
                 f"- {d.get('name', '')}: {d.get('description', '')}"
                 for d in deliverables
             ])
         
-        # 前回評価の文脈を追加
+        # Add context from previous evaluation
         previous_context = ""
         if previous_evaluation:
-            # 辞書型の場合は文字列に変換
+            # Convert to string if it's a dictionary
             if isinstance(previous_evaluation, dict):
                 import json
-                previous_context = f"\n【前回評価結果】\n{json.dumps(previous_evaluation, ensure_ascii=False, indent=2)}"
+                previous_context = f"\n[PREVIOUS EVALUATION RESULTS]\n{json.dumps(previous_evaluation, ensure_ascii=False, indent=2)}"
             else:
-                previous_context = f"\n【前回評価結果】\n{previous_evaluation}"
+                previous_context = f"\n[PREVIOUS EVALUATION RESULTS]\n{previous_evaluation}"
         
-        # 修正要求の文脈を追加
+        # Add context for modification requests
         feedback_context = ""
         if user_feedback:
-            feedback_context = f"\n【ユーザー修正要求】\n{user_feedback}\n⚠️ この修正要求を必ず反映して評価を更新してください。"
+            feedback_context = f"\n[USER MODIFICATION REQUEST]\n{user_feedback}\n⚠️ Please be sure to update the evaluation reflecting this modification request."
         
         user_input = f"""
-【プロジェクト要件】
+[PROJECT REQUIREMENTS]
 {project_requirements}
 {deliverables_context}
 {previous_context}
 {feedback_context}
 
-上記のプロジェクト要件を、業務・機能要件の観点から「What（何を作るか）」と「Why（なぜ作るか）」の視点で評価してください。
+Please evaluate the above project requirements from the perspectives of "What (what to build)" and "Why (why to build it)" in terms of business and functional requirements.
 
-評価すべき項目：
-1. 業務目的は明確に定義されているか？
-2. 機能要件は具体的で実装可能な形で記述されているか？
-3. ユーザーストーリーは網羅的に定義されているか？
-4. ビジネス価値は定量的に測定可能か？
-5. ステークホルダーは明確に特定されているか？
-6. 業務フローは現状・新業務ともに整理されているか？
+Items to evaluate:
+1. Are business objectives clearly defined?
+2. Are functional requirements described in specific and implementable terms?
+3. Are user stories comprehensively defined?
+4. Is business value quantitatively measurable?
+5. Are stakeholders clearly identified?
+6. Are business flows organized for both current and new business processes?
 
-【重要】修正要求がある場合は：
-- 修正要求による業務・機能要件への影響を評価
-- 前回評価からの変更点を明確化
-- 新たなリスクや推奨事項を特定
-- 評価スコアを適切に更新
+[IMPORTANT] When there are modification requests:
+- Evaluate the impact of modification requests on business and functional requirements
+- Clarify changes from previous evaluation
+- Identify new risks and recommendations
+- Update evaluation scores appropriately
 
-また、見積もり精度向上のために必要な業務面での質問を生成してください。
+Also, please generate business-focused questions necessary for improving estimation accuracy.
 """
         
-        # Pydantic構造化出力を使用
+        # Use Pydantic structured output
         additional_context = {
             "previous_evaluation": previous_evaluation if previous_evaluation is not None else {},
             "user_feedback": user_feedback,
@@ -116,13 +116,13 @@ class BusinessRequirementsAgentV2(PydanticAIAgent):
         try:
             result = self.execute_with_pydantic(user_input, BusinessEvaluationResult, additional_context)
             
-            # resultがNoneの場合のエラーハンドリング
+            # Error handling when result is None
             if result is None:
-                return self._create_error_response("Pydantic実行結果がNoneです")
+                return self._create_error_response("Pydantic execution result is None")
             
-            # 成功時の結果をラップ
+            # Wrap successful results
             if result.get("success"):
-                # business_evaluationキーでラップ
+                # Wrap with business_evaluation key
                 business_evaluation = {k: v for k, v in result.items() if k not in ["success", "_agent_metadata"]}
                 
                 return {
@@ -134,37 +134,37 @@ class BusinessRequirementsAgentV2(PydanticAIAgent):
             return result
         except Exception as e:
             import traceback
-            error_msg = f"業務要件評価中にエラーが発生しました: {str(e)}\n{traceback.format_exc()}"
-            print(f"[{self.agent_name}] エラー: {error_msg}")
+            error_msg = f"An error occurred during business requirements evaluation: {str(e)}\n{traceback.format_exc()}"
+            print(f"[{self.agent_name}] Error: {error_msg}")
             return self._create_error_response(error_msg)
     
     def generate_clarification_questions(self, current_requirements: str,
                                         focus_areas: List[str] = None,
                                         user_feedback: str = "") -> Dict[str, Any]:
-        """業務要件明確化のための質問生成（修正要求対応）"""
+        """Generate clarification questions for business requirements (with modification request support)"""
         
-        # focus_areas が None の場合のエラーハンドリング
+        # Error handling when focus_areas is None
         if focus_areas is None:
             focus_areas = []
             
         focus_context = ""
         if focus_areas:
-            focus_context = f"\n【重点確認エリア】\n" + "\n".join([f"- {area}" for area in focus_areas])
+            focus_context = f"\n[FOCUS AREAS]\n" + "\n".join([f"- {area}" for area in focus_areas])
         
         feedback_context = ""
         if user_feedback:
-            feedback_context = f"\n【ユーザー修正要求】\n{user_feedback}\n⚠️ この修正要求に関連する質問を重点的に生成してください。"
+            feedback_context = f"\n[USER MODIFICATION REQUEST]\n{user_feedback}\n⚠️ Please focus on generating questions related to this modification request."
         
         user_input = f"""
-【現在の要件】
+[CURRENT REQUIREMENTS]
 {current_requirements}
 {focus_context}
 {feedback_context}
 
-上記の要件に対して、業務・機能面での明確化を進めるための質問を生成してください。
-特に見積もり精度に直接影響する要素について重点的に質問を作成してください。
+Please generate questions to clarify business and functional aspects for the above requirements.
+Focus particularly on creating questions about elements that directly impact estimation accuracy.
 
-修正要求がある場合は、その要求に関連する追加質問も含めてください。
+If there are modification requests, please include additional questions related to those requests.
 """
         
         additional_context = {
@@ -175,11 +175,11 @@ class BusinessRequirementsAgentV2(PydanticAIAgent):
         try:
             result = self.execute_with_pydantic(user_input, BusinessEvaluationResult, additional_context)
             
-            # resultがNoneの場合のエラーハンドリング
+            # Error handling when result is None
             if result is None:
-                return self._create_error_response("Pydantic実行結果がNoneです")
+                return self._create_error_response("Pydantic execution result is None")
             
-            # 成功時の結果をラップ
+            # Wrap successful results
             if result.get("success"):
                 business_evaluation = {k: v for k, v in result.items() if k not in ["success", "_agent_metadata"]}
                 
@@ -192,6 +192,6 @@ class BusinessRequirementsAgentV2(PydanticAIAgent):
             return result
         except Exception as e:
             import traceback
-            error_msg = f"質問生成中にエラーが発生しました: {str(e)}\n{traceback.format_exc()}"
-            print(f"[{self.agent_name}] エラー: {error_msg}")
+            error_msg = f"An error occurred during question generation: {str(e)}\n{traceback.format_exc()}"
+            print(f"[{self.agent_name}] Error: {error_msg}")
             return self._create_error_response(error_msg)

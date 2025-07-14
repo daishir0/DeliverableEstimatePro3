@@ -1,6 +1,6 @@
 """
-DeliverableEstimatePro3 - メインアプリケーション
-4エージェント生成AI構成
+DeliverableEstimatePro3 - Main Application
+4-Agent AI Configuration for Deliverable Estimation
 """
 
 import os
@@ -14,38 +14,38 @@ from utils.excel_processor import ExcelProcessor
 from config.i18n_config import t, setup_i18n
 from state_manager import EstimationState
 
-# デバッグモードの設定を読み込み
+# Load debug mode configuration
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
 def debug_log(message):
-    """デバッグログを出力する関数"""
+    """Function to output debug logs"""
     if DEBUG_MODE:
         print(f"[DEBUG] {message}")
 
 
 class DeliverableEstimatePro3:
-    """メインアプリケーションクラス"""
+    """Main application class for deliverable estimation with 4-agent AI system"""
     
     def __init__(self):
-        # 環境変数読み込み（既にmain()で実行済み）
+        # Environment variables already loaded in main()
         # load_dotenv()
         
-        # 必須環境変数チェック
+        # Check required environment variables
         required_env = ["OPENAI_API_KEY"]
         missing_env = [var for var in required_env if not os.getenv(var)]
         if missing_env:
             raise ValueError(t("app.config.required_env_missing", vars=missing_env))
         
-        # コンポーネント初期化
+        # Initialize components
         self.workflow_orchestrator = SimpleWorkflowOrchestrator()
         self.excel_processor = ExcelProcessor()
         
-        # 設定値
+        # Configuration values
         self.daily_rate = float(os.getenv("DAILY_RATE", "50000"))
         self.tax_rate = float(os.getenv("TAX_RATE", "0.10"))
         self.output_dir = os.getenv("OUTPUT_DIR", "./output")
         
-        # デバッグモード設定
+        # Debug mode configuration
         self.debug_mode = DEBUG_MODE
         if self.debug_mode:
             debug_log(t("app.main.debug_mode"))
@@ -56,23 +56,23 @@ class DeliverableEstimatePro3:
             debug_log(f"OUTPUT_DIR: {self.output_dir}")
     
     def run(self):
-        """メインアプリケーション実行"""
+        """Execute main application workflow"""
         print(f"🚀 {t('app.main.title')}")
         print("="*60)
         
         try:
-            # 1. 入力収集
+            # 1. Collect inputs
             excel_file, requirements = self._collect_inputs()
             
-            # 2. Excel解析
+            # 2. Process Excel input
             deliverables = self._process_excel_input(excel_file)
             if not deliverables:
                 return
             
-            # 3. ワークフロー実行
+            # 3. Execute estimation workflow
             final_state = self._execute_estimation_workflow(excel_file, requirements, deliverables)
             
-            # 4. 結果出力
+            # 4. Output results
             self._output_results(final_state, excel_file)
             
         except KeyboardInterrupt:
@@ -81,14 +81,14 @@ class DeliverableEstimatePro3:
             error_msg = f"\n❌ {t('errors.system.unexpected', error=str(e))}"
             print(error_msg)
             if self.debug_mode:
-                debug_log(f"エラー詳細: {traceback.format_exc()}")
+                debug_log(f"Error details: {traceback.format_exc()}")
     
     def _collect_inputs(self) -> tuple:
-        """入力情報の収集"""
+        """Collect input information from user"""
         print(f"\n📝 {t('app.input.title')}")
         print("-" * 30)
         
-        # コマンドライン引数からExcelファイルパスを取得
+        # Get Excel file path from command line arguments
         excel_file = None
         if len(sys.argv) > 1:
             excel_file = sys.argv[1]
@@ -96,10 +96,10 @@ class DeliverableEstimatePro3:
         else:
             excel_file = input(t("app.input.excel_file_prompt")).strip()
             if not excel_file:
-                excel_file = "./input/sample_input.xlsx"  # デフォルト
+                excel_file = "./input/sample_input.xlsx"  # Default
                 print(t("app.input.default_file_used", file=excel_file))
         
-        # システム要件
+        # System requirements
         print(f"\n{t('app.input.system_requirements_prompt')}")
         requirements_lines = []
         while True:
@@ -116,7 +116,7 @@ class DeliverableEstimatePro3:
         return excel_file, requirements
     
     def _process_excel_input(self, excel_file: str) -> List[Dict[str, Any]]:
-        """Excel入力の処理"""
+        """Process Excel input file"""
         print(f"\n📊 {t('app.excel.analyzing')}")
         
         result = self.excel_processor.read_deliverables_from_excel(excel_file)
@@ -128,7 +128,7 @@ class DeliverableEstimatePro3:
         deliverables = result["deliverables"]
         print(t("app.excel.success", count=len(deliverables)))
         
-        # 成果物一覧表示
+        # Display deliverables list
         print(f"\n📋 {t('app.excel.deliverables_list')}")
         for i, item in enumerate(deliverables, 1):
             print(t("app.excel.deliverable_item", index=i, name=item['name'], description=item['description']))
@@ -137,7 +137,7 @@ class DeliverableEstimatePro3:
     
     def _execute_estimation_workflow(self, excel_file: str, requirements: str, 
                                    deliverables: List[Dict[str, Any]]) -> EstimationState:
-        """見積もりワークフローの実行"""
+        """Execute the estimation workflow with 4-agent AI system"""
         print(f"\n🤖 {t('workflow.orchestrator.title')}")
         print("-" * 40)
         
@@ -148,7 +148,7 @@ class DeliverableEstimatePro3:
         return final_state
     
     def _output_results(self, final_state: EstimationState, original_excel: str):
-        """結果出力"""
+        """Output estimation results"""
         print(f"\n📤 {t('app.output.title')}")
         
         if not final_state.get("user_approved"):
@@ -160,7 +160,7 @@ class DeliverableEstimatePro3:
             print(f"❌ {t('app.output.invalid_result')}")
             return
         
-        # Excel出力
+        # Excel output
         output_result = self.excel_processor.write_estimation_to_excel(
             estimation_result, original_excel, self.output_dir
         )
@@ -171,11 +171,11 @@ class DeliverableEstimatePro3:
         else:
             print(t("app.output.excel_error", error=output_result.get('error')))
         
-        # セッションログ出力
+        # Session log output
         self._output_session_logs(final_state)
     
     def _output_session_logs(self, final_state: EstimationState):
-        """セッションログの出力"""
+        """Output session logs to JSON file"""
         try:
             import json
             from datetime import datetime
@@ -206,12 +206,12 @@ class DeliverableEstimatePro3:
 
 
 def main():
-    """メイン関数"""
+    """Main function - Entry point of the application"""
     try:
-        # 環境変数を最初に読み込む
+        # Load environment variables first
         load_dotenv()
         
-        # .envの言語設定を反映してi18nを初期化
+        # Initialize i18n with language settings from .env
         setup_i18n()
         
         app = DeliverableEstimatePro3()

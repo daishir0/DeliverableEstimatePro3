@@ -1,5 +1,5 @@
 """
-ベースAIエージェント - 全エージェントの共通基盤
+Base AI Agent - Common Foundation for All Agents
 """
 
 import json
@@ -10,7 +10,7 @@ import os
 
 
 class BaseAIAgent:
-    """全エージェントの基底クラス"""
+    """Base class for all agents"""
     
     def __init__(self, agent_name: str, system_prompt: str):
         self.agent_name = agent_name
@@ -21,12 +21,12 @@ class BaseAIAgent:
         self.retry_delay = 1
     
     def execute_with_ai(self, user_input: str, additional_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """AI実行のメインメソッド（リトライ機能付き）"""
+        """Main method for AI execution (with retry functionality)"""
         
-        # コンテキスト情報を追加
+        # Add context information
         context_str = ""
         if additional_context:
-            context_str = f"\n\n【追加コンテキスト】\n{json.dumps(additional_context, ensure_ascii=False, indent=2)}"
+            context_str = f"\n\n[ADDITIONAL CONTEXT]\n{json.dumps(additional_context, ensure_ascii=False, indent=2)}"
         
         full_user_input = f"{user_input}{context_str}"
         
@@ -46,7 +46,7 @@ class BaseAIAgent:
                 content = response.choices[0].message.content
                 result = json.loads(content)
                 
-                # メタデータを追加
+                # Add metadata
                 result["_agent_metadata"] = {
                     "agent_name": self.agent_name,
                     "execution_time": time.time(),
@@ -57,21 +57,21 @@ class BaseAIAgent:
                 return result
                 
             except json.JSONDecodeError as e:
-                print(f"[{self.agent_name}] JSON解析エラー (試行 {attempt + 1}/{self.max_retries}): {str(e)}")
+                print(f"[{self.agent_name}] JSON parsing error (attempt {attempt + 1}/{self.max_retries}): {str(e)}")
                 if attempt == self.max_retries - 1:
-                    return self._create_error_response(f"JSON解析失敗: {str(e)}")
+                    return self._create_error_response(f"JSON parsing failed: {str(e)}")
                 time.sleep(self.retry_delay)
                 
             except Exception as e:
-                print(f"[{self.agent_name}] API実行エラー (試行 {attempt + 1}/{self.max_retries}): {str(e)}")
+                print(f"[{self.agent_name}] API execution error (attempt {attempt + 1}/{self.max_retries}): {str(e)}")
                 if attempt == self.max_retries - 1:
-                    return self._create_error_response(f"API実行失敗: {str(e)}")
+                    return self._create_error_response(f"API execution failed: {str(e)}")
                 time.sleep(self.retry_delay)
         
-        return self._create_error_response("最大リトライ回数に達しました")
+        return self._create_error_response("Maximum retry count reached")
     
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
-        """エラーレスポンスの標準フォーマット"""
+        """Standard format for error responses"""
         return {
             "success": False,
             "error": error_message,
@@ -84,13 +84,13 @@ class BaseAIAgent:
         }
     
     def validate_response(self, response: Dict[str, Any], required_keys: list) -> bool:
-        """レスポンスの必須キー検証"""
+        """Validate required keys in response"""
         if not response.get("success", False):
             return False
         
         for key in required_keys:
             if key not in response:
-                print(f"[{self.agent_name}] 必須キー '{key}' が見つかりません")
+                print(f"[{self.agent_name}] Required key '{key}' not found")
                 return False
         
         return True

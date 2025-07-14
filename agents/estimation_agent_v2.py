@@ -1,5 +1,5 @@
 """
-見積もりエージェント - PydanticOutputParser対応版
+Estimation Agent - PydanticOutputParser Compatible Version
 """
 
 from typing import Dict, Any, List
@@ -8,91 +8,91 @@ from .pydantic_models import EstimationResult
 
 
 class EstimationAgentV2(PydanticAIAgent):
-    """見積もりエージェント - Pydantic構造化出力対応"""
+    """Estimation Agent - Pydantic Structured Output Compatible"""
     
     def __init__(self):
         system_prompt = """
-あなたは経験豊富なシステム開発見積もりスペシャリストです。
-成果物リストと要件情報から正確な見積もりを生成するのが主な役割です。
+You are an experienced system development estimation specialist.
+Your primary role is to generate accurate estimates from deliverable lists and requirement information.
 
-【責務】
-1. 成果物の工数見積もり計算
-2. 金額計算（人日単価×工数）
-3. 技術前提条件の明確化
-4. 見積もりの信頼度評価
+[RESPONSIBILITIES]
+1. Calculate effort estimates for deliverables
+2. Calculate costs (daily rate × effort)
+3. Clarify technical prerequisites
+4. Evaluate estimation reliability
 
-【工数見積もり基準】
-- 要件定義書: 2-8人日（複雑度により調整）
-- システム設計書: 4-12人日（アーキテクチャ複雑度により調整）
-- フロントエンド開発: 8-25人日（画面数・機能により調整）
-- バックエンド開発: 10-30人日（API数・ビジネスロジック複雑度により調整）
-- データベース設計・実装: 5-18人日（テーブル数・関連性により調整）
-- テスト実装: 5-15人日（テスト範囲により調整）
-- セキュリティ実装: 3-15人日（セキュリティレベルにより調整）
-- デプロイ・運用設定: 2-10人日（インフラ複雑度により調整）
+[EFFORT ESTIMATION STANDARDS]
+- Requirements Definition: 2-8 person-days (adjusted by complexity)
+- System Design: 4-12 person-days (adjusted by architecture complexity)
+- Frontend Development: 8-25 person-days (adjusted by number of screens and features)
+- Backend Development: 10-30 person-days (adjusted by number of APIs and business logic complexity)
+- Database Design & Implementation: 5-18 person-days (adjusted by number of tables and relationships)
+- Test Implementation: 5-15 person-days (adjusted by test scope)
+- Security Implementation: 3-15 person-days (adjusted by security level)
+- Deployment & Operations Setup: 2-10 person-days (adjusted by infrastructure complexity)
 
-【複雑度調整係数】
-- Low: 1.0倍
-- Medium: 1.3倍  
-- High: 1.8倍
+[COMPLEXITY ADJUSTMENT FACTORS]
+- Low: 1.0x
+- Medium: 1.3x
+- High: 1.8x
 
-【リスク調整係数】
-- 新技術・未経験領域: +30%
-- 外部システム依存: +20%
-- パフォーマンス要件: +25%
-- 高度セキュリティ: +30%
-- 複数決済連携: +25%
-- 大規模データ: +20%
+[RISK ADJUSTMENT FACTORS]
+- New technology/unfamiliar domain: +30%
+- External system dependencies: +20%
+- Performance requirements: +25%
+- Advanced security: +30%
+- Multiple payment integrations: +25%
+- Large-scale data: +20%
 
-【技術前提条件のデフォルト】
-- エンジニアレベル: Python使用可能な平均的エンジニア
-- 開発環境: 標準的な開発環境
-- 人日単価: 50,000円（設定により変更可能）
+[DEFAULT TECHNICAL PREREQUISITES]
+- Engineer level: Average engineer capable of using Python
+- Development environment: Standard development environment
+- Daily rate: 50,000 JPY (configurable)
 
-各成果物について以下の計算を行ってください：
-1. 基礎工数の算出
-2. 複雑度による調整
-3. リスクによる調整
-4. 最終工数と金額の計算
-5. 信頼度の評価
+Please perform the following calculations for each deliverable:
+1. Calculate base effort
+2. Adjust for complexity
+3. Adjust for risks
+4. Calculate final effort and cost
+5. Evaluate reliability
 
-結果は指定されたPydanticモデル形式で返してください。
+Please return results in the specified Pydantic model format.
 """
         super().__init__("EstimationAgentV2", system_prompt)
     
     def generate_estimate(self, deliverables: List[Dict[str, Any]], 
                          project_requirements: str, 
                          evaluation_feedback: Dict[str, Any] = None) -> Dict[str, Any]:
-        """見積もり生成のメインメソッド"""
+        """Main method for estimate generation"""
         
-        # 成果物リストを文字列に変換
+        # Convert deliverables list to string
         deliverables_str = "\n".join([
             f"- {d.get('name', '')}: {d.get('description', '')}" 
             for d in deliverables
         ])
         
         user_input = f"""
-【成果物リスト】
+[DELIVERABLES LIST]
 {deliverables_str}
 
-【プロジェクト要件】
+[PROJECT REQUIREMENTS]
 {project_requirements}
 
-【評価フィードバック】
-業務・機能要件評価: {evaluation_feedback.get('business_evaluation', '未評価') if evaluation_feedback else '未評価'}
-品質・非機能要件評価: {evaluation_feedback.get('quality_evaluation', '未評価') if evaluation_feedback else '未評価'}
-制約・外部連携評価: {evaluation_feedback.get('constraints_evaluation', '未評価') if evaluation_feedback else '未評価'}
+[EVALUATION FEEDBACK]
+Business & Functional Requirements Evaluation: {evaluation_feedback.get('business_evaluation', 'Not evaluated') if evaluation_feedback else 'Not evaluated'}
+Quality & Non-functional Requirements Evaluation: {evaluation_feedback.get('quality_evaluation', 'Not evaluated') if evaluation_feedback else 'Not evaluated'}
+Constraints & External Integration Evaluation: {evaluation_feedback.get('constraints_evaluation', 'Not evaluated') if evaluation_feedback else 'Not evaluated'}
 
-上記の情報を基に、各成果物の工数見積もりと金額計算を実行してください。
-評価フィードバックの内容も考慮して、工数調整を行ってください。
+Based on the above information, please execute effort estimation and cost calculation for each deliverable.
+Please adjust effort considering the content of evaluation feedback.
 """
         
-        # Pydantic構造化出力を使用
+        # Use Pydantic structured output
         result = self.execute_with_pydantic(user_input, EstimationResult, evaluation_feedback)
         
-        # 成功時の結果をラップ
+        # Wrap results on success
         if result.get("success"):
-            # _agent_metadataを除外してestimation_resultキーでラップ
+            # Exclude _agent_metadata and wrap with estimation_result key
             estimation_result = {k: v for k, v in result.items() if k not in ["success", "_agent_metadata"]}
             
             return {
@@ -107,50 +107,50 @@ class EstimationAgentV2(PydanticAIAgent):
                        feedback: str, 
                        evaluation_updates: Dict[str, Any] = None,
                        previous_estimate: Dict[str, Any] = None) -> Dict[str, Any]:
-        """フィードバックに基づく見積もり改善（修正要求強化版）"""
+        """Improve estimates based on feedback (enhanced for modification requests)"""
         
-        # 前回見積もりとの比較コンテキスト
+        # Comparison context with previous estimate
         comparison_context = ""
         if previous_estimate:
             prev_total = previous_estimate.get("estimation_result", {}).get("financial_summary", {}).get("total_effort_days", 0)
             curr_total = current_estimate.get("estimation_result", {}).get("financial_summary", {}).get("total_effort_days", 0)
             comparison_context = f"""
-【前回見積もりとの比較】
-前回総工数: {prev_total}人日
-現在総工数: {curr_total}人日
-差分: {curr_total - prev_total:+.1f}人日
+[COMPARISON WITH PREVIOUS ESTIMATE]
+Previous total effort: {prev_total} person-days
+Current total effort: {curr_total} person-days
+Difference: {curr_total - prev_total:+.1f} person-days
 """
         
         user_input = f"""
-【現在の見積もり】
+[CURRENT ESTIMATE]
 {current_estimate}
 {comparison_context}
 
-【ユーザー修正要求】
+[USER MODIFICATION REQUEST]
 {feedback}
 
-【更新された評価結果】
-{evaluation_updates if evaluation_updates else '更新なし'}
+[UPDATED EVALUATION RESULTS]
+{evaluation_updates if evaluation_updates else 'No updates'}
 
-⚠️【重要】ユーザーの修正要求を必ず反映して見積もりを再計算してください。
+⚠️[IMPORTANT] Please be sure to recalculate the estimate reflecting the user's modification request.
 
-修正要求による具体的な変更内容：
-1. フィードバックで指摘された技術要件の追加・変更
-2. パフォーマンス要件やライブラリ制約の具体化
-3. それらによる工数・金額への影響を正確に計算
-4. 技術前提条件の更新（ライブラリ、パフォーマンス要件等）
-5. 新たなリスク要因の特定
+Specific changes due to modification request:
+1. Add/change technical requirements pointed out in feedback
+2. Concretize performance requirements and library constraints
+3. Accurately calculate the impact on effort and cost
+4. Update technical prerequisites (libraries, performance requirements, etc.)
+5. Identify new risk factors
 
-【例：レスポンス時間5秒要件が追加された場合】
-- パフォーマンス最適化工数を追加
-- キャッシュ・CDN実装工数を追加  
-- データベース最適化工数を追加
-- ライブラリ選定（Redis、Nginx等）を技術前提条件に追加
+[Example: When 5-second response time requirement is added]
+- Add performance optimization effort
+- Add cache/CDN implementation effort
+- Add database optimization effort
+- Add library selection (Redis, Nginx, etc.) to technical prerequisites
 
-見積もり結果は必ず前回から変更してください。同じ結果は受け付けません。
+The estimate results must be changed from the previous version. Same results are not acceptable.
 """
         
-        # 修正要求の解析情報を追加コンテキストに含める
+        # Include modification request analysis information in additional context
         additional_context = {
             "user_feedback": feedback,
             "previous_estimate": previous_estimate,
@@ -158,10 +158,10 @@ class EstimationAgentV2(PydanticAIAgent):
             "requires_recalculation": True
         }
         
-        # Pydantic構造化出力を使用
+        # Use Pydantic structured output
         result = self.execute_with_pydantic(user_input, EstimationResult, additional_context)
         
-        # 成功時の結果をラップ
+        # Wrap results on success
         if result.get("success"):
             estimation_result = {k: v for k, v in result.items() if k not in ["success", "_agent_metadata"]}
             

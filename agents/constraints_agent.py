@@ -1,5 +1,5 @@
 """
-制約・外部連携要件エージェント - Boundaries評価
+Constraints & External Integration Requirements Agent - Boundaries Evaluation
 """
 
 from typing import Dict, Any, List
@@ -7,107 +7,107 @@ from .base_ai_agent import BaseAIAgent
 
 
 class ConstraintsAgent(BaseAIAgent):
-    """制約・外部連携要件エージェント - Boundaries視点での評価"""
+    """Constraints & External Integration Requirements Agent - Boundaries Perspective Evaluation"""
     
     def __init__(self):
         system_prompt = """
-あなたは経験豊富なシステム制約・連携分析スペシャリストです。
-システム開発プロジェクトの制約・外部連携要件を「Boundaries（境界・制約条件）」の視点で評価するのが主な役割です。
+You are an experienced system constraints and integration analysis specialist.
+Your primary role is to evaluate constraints and external integration requirements for system development projects from the "Boundaries (boundary and constraint conditions)" perspective.
 
-【責務】
-1. 技術制約の特定・評価
-2. 外部システム連携要件の分析
-3. 法規制・コンプライアンス要件の確認
-4. リソース・スケジュール制約の評価
+[RESPONSIBILITIES]
+1. Identify and evaluate technical constraints
+2. Analyze external system integration requirements
+3. Verify legal regulations and compliance requirements
+4. Evaluate resource and schedule constraints
 
-【評価観点】
-- 技術制約（使用技術・プラットフォーム・ライブラリ制限）
-- 外部システム連携（API・データベース・認証システム・決済系）
-- 法規制・コンプライアンス（個人情報保護・業界規制・標準規格）
-- インフラ制約（クラウド・オンプレミス・ネットワーク・セキュリティ）
-- リソース制約（予算・人員・スケジュール・環境）
-- 運用制約（サポート体制・メンテナンス窓口・SLA）
+[EVALUATION PERSPECTIVES]
+- Technical constraints (technology usage, platform, library restrictions)
+- External system integration (API, database, authentication systems, payment systems)
+- Legal regulations and compliance (personal information protection, industry regulations, standards)
+- Infrastructure constraints (cloud, on-premises, network, security)
+- Resource constraints (budget, personnel, schedule, environment)
+- Operational constraints (support structure, maintenance windows, SLA)
 
-【評価基準】
-- 高評価 (Score: 80-100): 制約が明確で実現可能性が検証されている
-- 中評価 (Score: 50-79): 主要な制約は特定されているが、詳細確認が必要
-- 低評価 (Score: 0-49): 制約が不明確で実現リスクが高い
+[EVALUATION CRITERIA]
+- High rating (Score: 80-100): Constraints are clear and feasibility is verified
+- Medium rating (Score: 50-79): Major constraints are identified but detailed confirmation is needed
+- Low rating (Score: 0-49): Constraints are unclear with high implementation risks
 
-【制約の工数影響度】
-- 外部API連携: +15-30%の工数増
-- レガシーシステム連携: +25-50%の工数増
-- 高度セキュリティ要件: +20-40%の工数増
-- 特殊コンプライアンス対応: +30-60%の工数増
-- 複雑なインフラ要件: +20-35%の工数増
-- 厳格なスケジュール制約: +10-25%の工数増
+[CONSTRAINT EFFORT IMPACT]
+- External API integration: +15-30% effort increase
+- Legacy system integration: +25-50% effort increase
+- Advanced security requirements: +20-40% effort increase
+- Special compliance handling: +30-60% effort increase
+- Complex infrastructure requirements: +20-35% effort increase
+- Strict schedule constraints: +10-25% effort increase
 
-【質問生成の観点】
-- 連携する外部システムの詳細仕様
-- 使用必須・禁止技術の明確化
-- 法規制・コンプライアンス要件の具体化
-- インフラ・環境制約の詳細
-- 予算・スケジュール・人員制約
-- 運用・サポート体制の要件
+[QUESTION GENERATION PERSPECTIVES]
+- Detailed specifications of external systems to integrate
+- Clarification of mandatory/prohibited technologies
+- Concretization of legal regulations and compliance requirements
+- Details of infrastructure and environment constraints
+- Budget, schedule, and personnel constraints
+- Operational and support structure requirements
 
-必ず以下のJSON形式で回答してください：
+Please respond in the following JSON format:
 {
   "success": true,
   "constraints_evaluation": {
-    "overall_score": 総合評価点数(0-100),
+    "overall_score": overall_evaluation_score(0-100),
     "technical_constraints": {
-      "clarity_score": 明確性スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_constraints": ["特定された制約"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "clarity_score": clarity_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_constraints": ["identified_constraints"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "external_integrations": {
-      "specification_score": 仕様スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_integrations": ["特定された連携"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "specification_score": specification_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_integrations": ["identified_integrations"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "compliance_regulations": {
-      "coverage_score": 網羅性スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_requirements": ["特定された要件"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "coverage_score": coverage_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_requirements": ["identified_requirements"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "infrastructure_constraints": {
-      "definition_score": 定義スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_constraints": ["特定された制約"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "definition_score": definition_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_constraints": ["identified_constraints"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "resource_constraints": {
-      "realism_score": 現実性スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_constraints": ["特定された制約"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "realism_score": realism_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_constraints": ["identified_constraints"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "operational_constraints": {
-      "planning_score": 計画スコア(0-100),
-      "assessment": "評価コメント",
-      "identified_constraints": ["特定された制約"],
-      "missing_elements": ["不足している要素"],
-      "effort_impact_percentage": 工数影響度
+      "planning_score": planning_score(0-100),
+      "assessment": "evaluation_comment",
+      "identified_constraints": ["identified_constraints"],
+      "missing_elements": ["missing_elements"],
+      "effort_impact_percentage": effort_impact
     },
     "improvement_questions": [
       {
-        "category": "質問カテゴリ",
-        "question": "具体的な質問",
-        "purpose": "質問の目的",
-        "impact_on_estimation": "見積もりへの影響"
+        "category": "question_category",
+        "question": "specific_question",
+        "purpose": "question_purpose",
+        "impact_on_estimation": "impact_on_estimation"
       }
     ],
-    "total_effort_impact": 総工数影響度,
-    "feasibility_risks": ["実現可能性リスク"],
-    "mitigation_strategies": ["リスク緩和策"],
-    "recommendations": ["制約対応推奨事項"]
+    "total_effort_impact": total_effort_impact,
+    "feasibility_risks": ["feasibility_risks"],
+    "mitigation_strategies": ["risk_mitigation_strategies"],
+    "recommendations": ["constraint_handling_recommendations"]
   }
 }
 """
@@ -115,71 +115,71 @@ class ConstraintsAgent(BaseAIAgent):
     
     def evaluate_constraints(self, project_requirements: str, 
                            deliverables: List[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """制約・外部連携要件の評価"""
+        """Evaluate constraints and external integration requirements"""
         
         deliverables_context = ""
         if deliverables:
-            deliverables_context = "\n【成果物リスト】\n" + "\n".join([
+            deliverables_context = "\n[DELIVERABLES LIST]\n" + "\n".join([
                 f"- {d.get('name', '')}: {d.get('description', '')}" 
                 for d in deliverables
             ])
         
         user_input = f"""
-【プロジェクト要件】
+[PROJECT REQUIREMENTS]
 {project_requirements}
 {deliverables_context}
 
-上記のプロジェクト要件を、制約・外部連携要件の観点から「Boundaries（境界・制約条件）」の視点で評価してください。
+Please evaluate the above project requirements from the perspective of "Boundaries (boundary and constraint conditions)" in terms of constraints and external integration requirements.
 
-評価すべき項目：
-1. 技術制約は明確に特定されているか？
-2. 外部システム連携の仕様は具体的か？
-3. 法規制・コンプライアンス要件は網羅されているか？
-4. インフラ制約は適切に定義されているか？
-5. リソース制約（予算・人員・スケジュール）は現実的か？
-6. 運用制約は計画に含まれているか？
+Items to evaluate:
+1. Are technical constraints clearly identified?
+2. Are external system integration specifications specific?
+3. Are legal regulations and compliance requirements comprehensively covered?
+4. Are infrastructure constraints appropriately defined?
+5. Are resource constraints (budget, personnel, schedule) realistic?
+6. Are operational constraints included in the plan?
 
-また、各制約が見積もり工数に与える影響度を評価し、見積もり精度向上のために必要な制約面での質問を生成してください。
+Also, please evaluate the impact of each constraint on estimation effort and generate constraint-related questions necessary for improving estimation accuracy.
 """
         
         result = self.execute_with_ai(user_input)
         
-        # レスポンス検証
+        # Response validation
         required_keys = ["constraints_evaluation"]
         if not self.validate_response(result, required_keys):
-            return self._create_error_response("制約評価結果の形式が不正です")
+            return self._create_error_response("Invalid format for constraint evaluation results")
         
         return result
     
     def analyze_integration_complexity(self, integration_requirements: str, 
                                      target_systems: List[str] = None) -> Dict[str, Any]:
-        """外部連携の複雑度分析"""
+        """Analyze complexity of external integrations"""
         
         systems_context = ""
         if target_systems:
-            systems_context = f"\n【対象システム】\n" + "\n".join([f"- {sys}" for sys in target_systems])
+            systems_context = f"\n[TARGET SYSTEMS]\n" + "\n".join([f"- {sys}" for sys in target_systems])
         
         user_input = f"""
-【連携要件】
+[INTEGRATION REQUIREMENTS]
 {integration_requirements}
 {systems_context}
 
-上記の外部連携要件を分析し、実装工数への影響度を詳細に評価してください。
-特に以下の観点で分析してください：
+Please analyze the above external integration requirements and evaluate in detail the impact on implementation effort.
+Please analyze particularly from the following perspectives:
 
-1. API連携の複雑度とデータ形式変換
-2. 認証・認可方式の実装工数
-3. データ同期・整合性確保の要件
-4. エラーハンドリング・リトライ機構
-5. 連携テスト・結合テストの範囲
-6. 運用監視・障害対応の仕組み
+1. API integration complexity and data format conversion
+2. Implementation effort for authentication and authorization methods
+3. Data synchronization and consistency requirements
+4. Error handling and retry mechanisms
+5. Scope of integration testing and system integration testing
+6. Operational monitoring and failure response mechanisms
 """
         
         result = self.execute_with_ai(user_input)
         
-        # レスポンス検証
+        # Response validation
         required_keys = ["constraints_evaluation"]
         if not self.validate_response(result, required_keys):
-            return self._create_error_response("連携複雑度分析結果の形式が不正です")
+            return self._create_error_response("Invalid format for integration complexity analysis results")
         
         return result

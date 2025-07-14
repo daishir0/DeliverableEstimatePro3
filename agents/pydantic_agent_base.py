@@ -1,5 +1,5 @@
 """
-PydanticOutputParser対応ベースAIエージェント
+Base AI Agent Compatible with PydanticOutputParser
 """
 
 import os
@@ -14,16 +14,16 @@ from config.i18n_config import t
 
 
 class PydanticAIAgent:
-    """PydanticOutputParser対応ベースクラス"""
+    """Base class compatible with PydanticOutputParser"""
     
     def __init__(self, agent_name: str, system_prompt: str):
         self.agent_name = agent_name
         self.system_prompt = system_prompt
         
-        # APIキーの存在確認
+        # Check for API key existence
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key or api_key == "dummy_key_for_testing":
-            print(f"⚠️ 警告: OpenAI APIキーが設定されていません。{self.agent_name}はダミーデータを返します。")
+            print(f"⚠️ Warning: OpenAI API key is not set. {self.agent_name} will return dummy data.")
             self.llm = None
         else:
             self.model = os.getenv("MODEL", "gpt-4o-mini")
@@ -39,54 +39,54 @@ class PydanticAIAgent:
     def execute_with_pydantic(self, user_input: str, 
                              pydantic_model: Type[BaseModel],
                              additional_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Pydantic構造化出力での実行（エラーハンドリング強化版）"""
+        """Execute with Pydantic structured output (enhanced error handling version)"""
         
-        # APIキーが無い場合はダミーデータを返す
+        # Return dummy data if no API key
         if self.llm is None:
             return self._create_dummy_response(pydantic_model)
         
-        # 入力の安全性チェック
+        # Input safety check
         if not user_input or not isinstance(user_input, str):
-            return self._create_error_response("無効な入力データです")
+            return self._create_error_response("Invalid input data")
         
-        # PydanticOutputParserの設定
+        # Configure PydanticOutputParser
         try:
             parser = PydanticOutputParser(pydantic_object=pydantic_model)
         except Exception as e:
-            return self._create_error_response(f"パーサー作成エラー: {str(e)}")
+            return self._create_error_response(f"Parser creation error: {str(e)}")
         
-        # コンテキスト情報を追加
+        # Add context information
         context_str = ""
         if additional_context:
             try:
                 import json
-                context_str = f"\n\n【追加コンテキスト】\n{json.dumps(additional_context, ensure_ascii=False, indent=2)}"
+                context_str = f"\n\n[ADDITIONAL CONTEXT]\n{json.dumps(additional_context, ensure_ascii=False, indent=2)}"
             except Exception as e:
-                print(f"[{self.agent_name}] コンテキスト処理警告: {str(e)}")
-                context_str = f"\n\n【追加コンテキスト】\n{str(additional_context)}"
+                print(f"[{self.agent_name}] Context processing warning: {str(e)}")
+                context_str = f"\n\n[ADDITIONAL CONTEXT]\n{str(additional_context)}"
         
-        # プロンプトテンプレート作成
+        # Create prompt template
         try:
             prompt = ChatPromptTemplate.from_template(
                 self.system_prompt + "\n\n{user_input}{context_str}\n\n{format_instructions}"
             ).partial(format_instructions=parser.get_format_instructions())
             
-            # チェーン作成
+            # Create chain
             chain = prompt | self.llm | parser
         except Exception as e:
-            return self._create_error_response(f"プロンプト・チェーン作成エラー: {str(e)}")
+            return self._create_error_response(f"Prompt/chain creation error: {str(e)}")
         
-        # リトライ実行（指数バックオフ付き）
+        # Retry execution (with exponential backoff)
         for attempt in range(self.max_retries):
             try:
-                print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_attempt', attempt=attempt + 1, max=self.max_retries)}")
+                # print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_attempt', attempt=attempt + 1, max=self.max_retries)}")
                 
                 result = chain.invoke({
                     "user_input": user_input,
                     "context_str": context_str
                 })
                 
-                # Pydanticモデルを辞書に変換
+                # Convert Pydantic model to dictionary
                 if isinstance(result, BaseModel):
                     result_dict = result.dict()
                     result_dict["success"] = True
@@ -96,10 +96,10 @@ class PydanticAIAgent:
                         "model_used": self.model,
                         "execution_time": time.time()
                     }
-                    print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_success')}")
+                    # print(f"[{self.agent_name}] {t('workflow.agents_internal.execution_success')}")
                     return result_dict
                 else:
-                    # 辞書形式の場合
+                    # For dictionary format
                     return {
                         "success": True,
                         "result": result,
@@ -112,21 +112,21 @@ class PydanticAIAgent:
                     }
                 
             except ValidationError as e:
-                print(f"[{self.agent_name}] バリデーションエラー (試行 {attempt + 1}/{self.max_retries}): {str(e)}")
+                print(f"[{self.agent_name}] Validation error (attempt {attempt + 1}/{self.max_retries}): {str(e)}")
                 if attempt == self.max_retries - 1:
-                    return self._create_dummy_response(pydantic_model, f"バリデーションエラー: {str(e)}")
-                time.sleep(2 ** attempt)  # 指数バックオフ
+                    return self._create_dummy_response(pydantic_model, f"Validation error: {str(e)}")
+                time.sleep(2 ** attempt)  # Exponential backoff
                 
             except Exception as e:
-                print(f"[{self.agent_name}] 実行エラー (試行 {attempt + 1}/{self.max_retries}): {str(e)}")
+                print(f"[{self.agent_name}] Execution error (attempt {attempt + 1}/{self.max_retries}): {str(e)}")
                 if attempt == self.max_retries - 1:
-                    return self._create_dummy_response(pydantic_model, f"実行エラー: {str(e)}")
-                time.sleep(2 ** attempt)  # 指数バックオフ
+                    return self._create_dummy_response(pydantic_model, f"Execution error: {str(e)}")
+                time.sleep(2 ** attempt)  # Exponential backoff
         
-        return self._create_dummy_response(pydantic_model, "最大リトライ回数に達しました")
+        return self._create_dummy_response(pydantic_model, "Maximum retry count reached")
     
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
-        """エラーレスポンスの標準フォーマット"""
+        """Standard format for error responses"""
         return {
             "success": False,
             "error": error_message,
@@ -139,7 +139,7 @@ class PydanticAIAgent:
         }
     
     def _create_dummy_response(self, pydantic_model: Type[BaseModel], error_message: str = "") -> Dict[str, Any]:
-        """ダミーレスポンスの作成（エラー時やAPIキー無し時）"""
+        """Create dummy response (for errors or when no API key)"""
         from .pydantic_models import (
             BusinessEvaluationResult, QualityEvaluationResult, 
             ConstraintsEvaluationResult, EstimationResult
@@ -155,12 +155,12 @@ class PydanticAIAgent:
             elif pydantic_model == EstimationResult:
                 return self._create_dummy_estimation_result()
             else:
-                # 汎用ダミー
+                # Generic dummy
                 return {
                     "success": True,
                     "dummy_data": True,
                     "overall_score": 75,
-                    "note": f"APIキーが無いため{self.agent_name}のダミーデータです",
+                    "note": f"Dummy data from {self.agent_name} due to missing API key",
                     "error_note": error_message,
                     "_agent_metadata": {
                         "agent_name": self.agent_name,
@@ -169,54 +169,54 @@ class PydanticAIAgent:
                     }
                 }
         except Exception as e:
-            print(f"[{self.agent_name}] ダミー作成エラー: {str(e)}")
-            return self._create_error_response(f"ダミー作成エラー: {str(e)}")
+            print(f"[{self.agent_name}] Dummy creation error: {str(e)}")
+            return self._create_error_response(f"Dummy creation error: {str(e)}")
     
     def _create_dummy_business_evaluation(self) -> Dict[str, Any]:
-        """業務要件評価のダミーデータ"""
+        """Dummy data for business requirements evaluation"""
         return {
             "success": True,
             "overall_score": 75,
             "business_purpose": {
                 "clarity_score": 70,
-                "assessment": "ダミーデータ: 業務目的は基本的に明確",
-                "missing_elements": ["詳細なKPI設定"]
+                "assessment": "Dummy data: Business purpose is basically clear",
+                "missing_elements": ["Detailed KPI settings"]
             },
             "functional_requirements": {
                 "completeness_score": 80,
-                "assessment": "ダミーデータ: 機能要件は概ね網羅",
-                "missing_elements": ["画面遷移の詳細"]
+                "assessment": "Dummy data: Functional requirements are generally covered",
+                "missing_elements": ["Screen transition details"]
             },
             "user_stories": {
                 "coverage_score": 65,
-                "assessment": "ダミーデータ: ユーザーストーリーは部分的",
-                "missing_elements": ["エラーケースの考慮"]
+                "assessment": "Dummy data: User stories are partial",
+                "missing_elements": ["Error case considerations"]
             },
             "business_value": {
                 "quantification_score": 60,
-                "assessment": "ダミーデータ: ビジネス価値の定量化が不足",
-                "missing_elements": ["ROI計算"]
+                "assessment": "Dummy data: Business value quantification is insufficient",
+                "missing_elements": ["ROI calculation"]
             },
             "stakeholders": {
                 "identification_score": 70,
-                "assessment": "ダミーデータ: 主要ステークホルダーは特定済み",
-                "missing_elements": ["承認フロー"]
+                "assessment": "Dummy data: Key stakeholders are identified",
+                "missing_elements": ["Approval flow"]
             },
             "business_flow": {
                 "clarity_score": 75,
-                "assessment": "ダミーデータ: 業務フローは基本的に整理済み",
-                "missing_elements": ["例外処理フロー"]
+                "assessment": "Dummy data: Business flow is basically organized",
+                "missing_elements": ["Exception handling flow"]
             },
             "improvement_questions": [
                 {
-                    "category": "業務目的",
-                    "question": "具体的なKPI目標値は？",
-                    "purpose": "定量評価のため",
-                    "impact_on_estimation": "工数の精度向上"
+                    "category": "Business Purpose",
+                    "question": "What are the specific KPI target values?",
+                    "purpose": "For quantitative evaluation",
+                    "impact_on_estimation": "Improve effort accuracy"
                 }
             ],
-            "risk_factors": ["要件変更リスク", "ステークホルダー調整コスト"],
-            "recommendations": ["KPI設定の明確化", "ユーザーストーリーの詳細化"],
+            "risk_factors": ["Requirements change risk", "Stakeholder coordination cost"],
+            "recommendations": ["Clarify KPI settings", "Detail user stories"],
             "_agent_metadata": {
                 "agent_name": self.agent_name,
                 "status": "dummy",
@@ -225,57 +225,57 @@ class PydanticAIAgent:
         }
     
     def _create_dummy_quality_evaluation(self) -> Dict[str, Any]:
-        """品質要件評価のダミーデータ"""
+        """Dummy data for quality requirements evaluation"""
         return {
             "success": True,
             "overall_score": 70,
             "performance_requirements": {
                 "definition_score": 65,
-                "assessment": "ダミーデータ: パフォーマンス要件は部分的に定義",
-                "missing_elements": ["具体的なレスポンス時間"],
+                "assessment": "Dummy data: Performance requirements are partially defined",
+                "missing_elements": ["Specific response time"],
                 "effort_impact_percentage": 15.0
             },
             "security_requirements": {
                 "completeness_score": 75,
-                "assessment": "ダミーデータ: セキュリティ要件は基本レベル",
-                "missing_elements": ["脆弱性対策詳細"],
+                "assessment": "Dummy data: Security requirements are at basic level",
+                "missing_elements": ["Vulnerability countermeasure details"],
                 "effort_impact_percentage": 20.0
             },
             "availability_reliability": {
                 "specification_score": 60,
-                "assessment": "ダミーデータ: 可用性要件が不明確",
-                "missing_elements": ["稼働率目標"],
+                "assessment": "Dummy data: Availability requirements are unclear",
+                "missing_elements": ["Uptime targets"],
                 "effort_impact_percentage": 10.0
             },
             "scalability_maintainability": {
                 "consideration_score": 70,
-                "assessment": "ダミーデータ: 拡張性は考慮済み",
-                "missing_elements": ["メンテナンス計画"],
+                "assessment": "Dummy data: Scalability is considered",
+                "missing_elements": ["Maintenance plan"],
                 "effort_impact_percentage": 12.0
             },
             "usability": {
                 "requirement_score": 65,
-                "assessment": "ダミーデータ: ユーザビリティは基本考慮",
-                "missing_elements": ["アクセシビリティ要件"],
+                "assessment": "Dummy data: Usability is basically considered",
+                "missing_elements": ["Accessibility requirements"],
                 "effort_impact_percentage": 8.0
             },
             "operational_monitoring": {
                 "planning_score": 55,
-                "assessment": "ダミーデータ: 運用監視計画が不足",
-                "missing_elements": ["監視項目の詳細"],
+                "assessment": "Dummy data: Operational monitoring plan is insufficient",
+                "missing_elements": ["Monitoring item details"],
                 "effort_impact_percentage": 15.0
             },
             "improvement_questions": [
                 {
-                    "category": "パフォーマンス",
-                    "question": "想定するレスポンス時間は？",
-                    "purpose": "パフォーマンス設計のため",
-                    "impact_on_estimation": "最適化工数の算出"
+                    "category": "Performance",
+                    "question": "What is the expected response time?",
+                    "purpose": "For performance design",
+                    "impact_on_estimation": "Calculate optimization effort"
                 }
             ],
             "total_effort_impact": 25.0,
-            "risk_factors": ["パフォーマンス不足リスク", "運用監視不備"],
-            "recommendations": ["パフォーマンス要件の明確化", "監視計画の策定"],
+            "risk_factors": ["Performance deficiency risk", "Operational monitoring deficiencies"],
+            "recommendations": ["Clarify performance requirements", "Establish monitoring plan"],
             "_agent_metadata": {
                 "agent_name": self.agent_name,
                 "status": "dummy",
@@ -284,64 +284,64 @@ class PydanticAIAgent:
         }
     
     def _create_dummy_constraints_evaluation(self) -> Dict[str, Any]:
-        """制約要件評価のダミーデータ"""
+        """Dummy data for constraints requirements evaluation"""
         return {
             "success": True,
             "overall_score": 65,
             "technical_constraints": {
                 "clarity_score": 60,
-                "assessment": "ダミーデータ: 技術制約は部分的に明確",
-                "identified_constraints": ["React/Node.js使用"],
-                "missing_elements": ["ライブラリ制限"],
+                "assessment": "Dummy data: Technical constraints are partially clear",
+                "identified_constraints": ["React/Node.js usage"],
+                "missing_elements": ["Library restrictions"],
                 "effort_impact_percentage": 10.0
             },
             "external_integrations": {
                 "specification_score": 55,
-                "assessment": "ダミーデータ: 外部連携仕様が不十分",
-                "identified_constraints": ["決済システム連携"],
-                "missing_elements": ["API仕様詳細"],
+                "assessment": "Dummy data: External integration specifications are insufficient",
+                "identified_constraints": ["Payment system integration"],
+                "missing_elements": ["API specification details"],
                 "effort_impact_percentage": 20.0
             },
             "compliance_regulations": {
                 "coverage_score": 70,
-                "assessment": "ダミーデータ: 基本的な法規制は考慮",
-                "identified_constraints": ["個人情報保護法"],
-                "missing_elements": ["業界固有規制"],
+                "assessment": "Dummy data: Basic legal regulations are considered",
+                "identified_constraints": ["Personal Information Protection Law"],
+                "missing_elements": ["Industry-specific regulations"],
                 "effort_impact_percentage": 15.0
             },
             "infrastructure_constraints": {
                 "definition_score": 65,
-                "assessment": "ダミーデータ: インフラ制約は概ね明確",
-                "identified_constraints": ["クラウド利用"],
-                "missing_elements": ["具体的なサービス制限"],
+                "assessment": "Dummy data: Infrastructure constraints are generally clear",
+                "identified_constraints": ["Cloud usage"],
+                "missing_elements": ["Specific service limitations"],
                 "effort_impact_percentage": 8.0
             },
             "resource_constraints": {
                 "realism_score": 75,
-                "assessment": "ダミーデータ: リソース制約は現実的",
-                "identified_constraints": ["予算制限", "スケジュール制限"],
-                "missing_elements": ["人員スキル制約"],
+                "assessment": "Dummy data: Resource constraints are realistic",
+                "identified_constraints": ["Budget limitations", "Schedule limitations"],
+                "missing_elements": ["Personnel skill constraints"],
                 "effort_impact_percentage": 12.0
             },
             "operational_constraints": {
                 "planning_score": 60,
-                "assessment": "ダミーデータ: 運用制約は部分的に計画",
-                "identified_constraints": ["運用時間制限"],
-                "missing_elements": ["サポート体制"],
+                "assessment": "Dummy data: Operational constraints are partially planned",
+                "identified_constraints": ["Operating time limitations"],
+                "missing_elements": ["Support structure"],
                 "effort_impact_percentage": 10.0
             },
             "improvement_questions": [
                 {
-                    "category": "技術制約",
-                    "question": "使用禁止ライブラリはありますか？",
-                    "purpose": "技術選定のため",
-                    "impact_on_estimation": "実装方式の決定"
+                    "category": "Technical Constraints",
+                    "question": "Are there any prohibited libraries?",
+                    "purpose": "For technology selection",
+                    "impact_on_estimation": "Determine implementation approach"
                 }
             ],
             "total_effort_impact": 18.0,
-            "feasibility_risks": ["外部連携不具合", "法規制変更"],
-            "mitigation_strategies": ["早期API検証", "法務確認"],
-            "recommendations": ["外部連携仕様の詳細化", "制約条件の明文化"],
+            "feasibility_risks": ["External integration issues", "Legal regulation changes"],
+            "mitigation_strategies": ["Early API verification", "Legal confirmation"],
+            "recommendations": ["Detail external integration specifications", "Document constraint conditions"],
             "_agent_metadata": {
                 "agent_name": self.agent_name,
                 "status": "dummy",
@@ -350,31 +350,31 @@ class PydanticAIAgent:
         }
     
     def _create_dummy_estimation_result(self) -> Dict[str, Any]:
-        """見積もり結果のダミーデータ"""
+        """Dummy data for estimation results"""
         return {
             "success": True,
             "deliverable_estimates": [
                 {
-                    "name": "要件定義書",
-                    "description": "システム要件定義",
+                    "name": "Requirements Definition Document",
+                    "description": "System requirements definition",
                     "base_effort_days": 5.0,
                     "complexity_multiplier": 1.2,
                     "risk_multiplier": 1.1,
                     "final_effort_days": 6.6,
                     "cost_jpy": 330000,
                     "confidence_score": 0.8,
-                    "rationale": "ダミーデータ: 標準的な要件定義工数"
+                    "rationale": "Dummy data: Standard requirements definition effort"
                 },
                 {
-                    "name": "システム設計書",
-                    "description": "技術設計書",
+                    "name": "System Design Document",
+                    "description": "Technical design document",
                     "base_effort_days": 8.0,
                     "complexity_multiplier": 1.3,
                     "risk_multiplier": 1.2,
                     "final_effort_days": 12.5,
                     "cost_jpy": 625000,
                     "confidence_score": 0.75,
-                    "rationale": "ダミーデータ: アーキテクチャ設計工数"
+                    "rationale": "Dummy data: Architecture design effort"
                 }
             ],
             "financial_summary": {
@@ -384,15 +384,15 @@ class PydanticAIAgent:
                 "total_jpy": 13475000
             },
             "technical_assumptions": {
-                "engineer_level": "Python使用可能な平均的エンジニア",
+                "engineer_level": "Average engineer capable of using Python",
                 "daily_rate_jpy": 50000,
                 "development_stack": "React, Express.js, PostgreSQL",
                 "team_size": 4,
                 "project_duration_months": 6
             },
             "overall_confidence": 0.78,
-            "key_risks": ["技術的複雑性", "外部連携リスク", "スケジュール制約"],
-            "recommendations": ["プロトタイプ作成", "早期技術検証", "リスク管理計画"],
+            "key_risks": ["Technical complexity", "External integration risk", "Schedule constraints"],
+            "recommendations": ["Create prototype", "Early technical verification", "Risk management plan"],
             "_agent_metadata": {
                 "agent_name": self.agent_name,
                 "status": "dummy", 

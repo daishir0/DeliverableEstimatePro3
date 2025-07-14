@@ -1,1 +1,1 @@
-# 4エージェント構成 - 生成AI統合
+# 4-Agent Configuration - Generative AI Integration
