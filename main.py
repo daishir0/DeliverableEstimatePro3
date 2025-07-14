@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 from workflow_orchestrator_simple import SimpleWorkflowOrchestrator
 from utils.excel_processor import ExcelProcessor
+from utils.currency_utils import currency_formatter
 from config.i18n_config import t, setup_i18n
 from state_manager import EstimationState
 
@@ -41,8 +42,7 @@ class DeliverableEstimatePro3:
         self.excel_processor = ExcelProcessor()
         
         # Configuration values
-        self.daily_rate = float(os.getenv("DAILY_RATE", "50000"))
-        self.tax_rate = float(os.getenv("TAX_RATE", "0.10"))
+        self.currency_formatter = currency_formatter
         self.output_dir = os.getenv("OUTPUT_DIR", "./output")
         
         # Debug mode configuration
@@ -51,8 +51,10 @@ class DeliverableEstimatePro3:
             debug_log(t("app.main.debug_mode"))
             api_key_status = t("app.config.api_key_set") if os.getenv('OPENAI_API_KEY') else t("app.config.api_key_not_set")
             debug_log(t("app.config.api_key_status", status=api_key_status))
-            debug_log(f"DAILY_RATE: {self.daily_rate}")
-            debug_log(f"TAX_RATE: {self.tax_rate}")
+            currency_info = self.currency_formatter.get_currency_info()
+            debug_log(f"CURRENCY: {currency_info['currency']}")
+            debug_log(f"DAILY_RATE: {currency_info['daily_rate']}")
+            debug_log(f"TAX_RATE: {currency_info['tax_rate']}")
             debug_log(f"OUTPUT_DIR: {self.output_dir}")
     
     def run(self):

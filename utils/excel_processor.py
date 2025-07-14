@@ -6,6 +6,7 @@ import pandas as pd
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from utils.currency_utils import currency_formatter
 
 
 class ExcelProcessor:
@@ -123,7 +124,7 @@ class ExcelProcessor:
         else:
             return "other"
     
-    def _merge_estimation_data(self, original_df: pd.DataFrame, 
+    def _merge_estimation_data(self, original_df: pd.DataFrame,
                               estimation_result: Dict[str, Any]) -> Dict[str, pd.DataFrame]:
         """Integrate estimation data with original data"""
         try:
@@ -136,29 +137,67 @@ class ExcelProcessor:
                 deliverable_estimates = est_data.get("deliverable_estimates", [])
                 
                 # Add effort and cost columns
+                currency_code = currency_formatter.get_currency_code()
                 main_data["Estimated Effort (Person-days)"] = ""
-                main_data["Cost (JPY)"] = ""
+                main_data[f"Cost ({currency_code})"] = ""
                 main_data["Confidence"] = ""
                 
-                # Map estimation data
+                # Track matched deliverables
+                matched_names = set()
+                
+                # Map estimation data to existing rows
                 for est in deliverable_estimates:
                     name = est.get("name", "")
-                    # Match by name
-                    matching_rows = main_data[main_data.iloc[:, 0].str.contains(name, na=False)]
+                    # Match by name (partial match for flexibility)
+                    matching_rows = main_data[main_data.iloc[:, 0].str.contains(name.split()[0], na=False, case=False)]
                     if not matching_rows.empty:
                         idx = matching_rows.index[0]
                         main_data.at[idx, "Estimated Effort (Person-days)"] = est.get("final_effort_days", 0)
-                        main_data.at[idx, "Cost (JPY)"] = est.get("cost_jpy", 0)
+                        main_data.at[idx, f"Cost ({currency_code})"] = est.get("cost", 0)
                         main_data.at[idx, "Confidence"] = est.get("confidence_score", 0)
+                        matched_names.add(name)
                 
-                # Add summary row
-                financial_summary = est_data.get("financial_summary", {})
+                # Add new deliverables that weren't in the original file
+                for est in deliverable_estimates:
+                    name = est.get("name", "")
+                    if name not in matched_names:
+                        # Check if this is truly a new deliverable (not just a partial match miss)
+                        is_new = True
+                        for existing_name in main_data.iloc[:, 0]:
+                            if pd.notna(existing_name) and name.lower() in str(existing_name).lower():
+                                is_new = False
+                                break
+                        
+                        if is_new:
+                            new_row = {
+                                main_data.columns[0]: name,
+                                main_data.columns[1]: est.get("description", ""),
+                                "Estimated Effort (Person-days)": est.get("final_effort_days", 0),
+                                f"Cost ({currency_code})": est.get("cost", 0),
+                                "Confidence": est.get("confidence_score", 0)
+                            }
+                            # Fill other columns with empty values
+                            for col in main_data.columns:
+                                if col not in new_row:
+                                    new_row[col] = ""
+                            
+                            main_data = pd.concat([main_data, pd.DataFrame([new_row])], ignore_index=True)
+                
+                # Calculate accurate totals from individual deliverables (not from AI-generated financial_summary)
+                total_effort = sum(est.get("final_effort_days", 0) for est in deliverable_estimates)
+                total_cost = sum(est.get("cost", 0) for est in deliverable_estimates)
+                
+                # Calculate weighted average confidence
+                total_confidence_weighted = sum(est.get("confidence_score", 0) * est.get("final_effort_days", 0) for est in deliverable_estimates)
+                avg_confidence = total_confidence_weighted / total_effort if total_effort > 0 else 0
+                
+                # Add summary row with accurate calculations
                 summary_row = {
                     main_data.columns[0]: "【Total】",
                     main_data.columns[1]: "Grand Total",
-                    "Estimated Effort (Person-days)": financial_summary.get("total_effort_days", 0),
-                    "Cost (JPY)": financial_summary.get("total_jpy", 0),
-                    "Confidence": est_data.get("overall_confidence", 0)
+                    "Estimated Effort (Person-days)": total_effort,
+                    f"Cost ({currency_code})": total_cost,
+                    "Confidence": round(avg_confidence, 2)
                 }
                 main_data = pd.concat([main_data, pd.DataFrame([summary_row])], ignore_index=True)
             
@@ -203,9 +242,9 @@ class ExcelProcessor:
             
             summary = [
                 {"Item": "Total Effort", "Value": f"{financial_summary.get('total_effort_days', 0)} person-days"},
-                {"Item": "Subtotal", "Value": f"¥{financial_summary.get('subtotal_jpy', 0):,}"},
-                {"Item": "Tax", "Value": f"¥{financial_summary.get('tax_jpy', 0):,}"},
-                {"Item": "Total Amount", "Value": f"¥{financial_summary.get('total_jpy', 0):,}"},
+                {"Item": "Subtotal", "Value": currency_formatter.format_amount(financial_summary.get('subtotal', 0))},
+                {"Item": "Tax", "Value": currency_formatter.format_amount(financial_summary.get('tax', 0))},
+                {"Item": "Total Amount", "Value": currency_formatter.format_amount(financial_summary.get('total', 0))},
                 {"Item": "Overall Confidence", "Value": f"{est_data.get('overall_confidence', 0)}"}
             ]
         
@@ -215,5 +254,5 @@ class ExcelProcessor:
         """Extract total amount"""
         if estimation_result.get("success") and "estimation_result" in estimation_result:
             financial_summary = estimation_result["estimation_result"].get("financial_summary", {})
-            return financial_summary.get("total_jpy", 0)
+            return financial_summary.get("total", 0)
         return 0

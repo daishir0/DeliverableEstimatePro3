@@ -361,7 +361,7 @@ class PydanticAIAgent:
                     "complexity_multiplier": 1.2,
                     "risk_multiplier": 1.1,
                     "final_effort_days": 6.6,
-                    "cost_jpy": 330000,
+                    "cost": 3300.0,
                     "confidence_score": 0.8,
                     "rationale": "Dummy data: Standard requirements definition effort"
                 },
@@ -372,20 +372,21 @@ class PydanticAIAgent:
                     "complexity_multiplier": 1.3,
                     "risk_multiplier": 1.2,
                     "final_effort_days": 12.5,
-                    "cost_jpy": 625000,
+                    "cost": 6250.0,
                     "confidence_score": 0.75,
                     "rationale": "Dummy data: Architecture design effort"
                 }
             ],
             "financial_summary": {
                 "total_effort_days": 245.0,
-                "subtotal_jpy": 12250000,
-                "tax_jpy": 1225000,
-                "total_jpy": 13475000
+                "subtotal": 122500.0,
+                "tax": 12250.0,
+                "total": 134750.0
             },
             "technical_assumptions": {
                 "engineer_level": "Average engineer capable of using Python",
-                "daily_rate_jpy": 50000,
+                "daily_rate": 500.0,
+                "currency": "USD",
                 "development_stack": "React, Express.js, PostgreSQL",
                 "team_size": 4,
                 "project_duration_months": 6

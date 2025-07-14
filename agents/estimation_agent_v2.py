@@ -5,6 +5,7 @@ Estimation Agent - PydanticOutputParser Compatible Version
 from typing import Dict, Any, List
 from .pydantic_agent_base import PydanticAIAgent
 from .pydantic_models import EstimationResult
+from utils.currency_utils import currency_formatter
 
 
 class EstimationAgentV2(PydanticAIAgent):
@@ -47,7 +48,7 @@ Your primary role is to generate accurate estimates from deliverable lists and r
 [DEFAULT TECHNICAL PREREQUISITES]
 - Engineer level: Average engineer capable of using Python
 - Development environment: Standard development environment
-- Daily rate: 50,000 JPY (configurable)
+- Daily rate: Will be specified in currency settings (configurable)
 
 Please perform the following calculations for each deliverable:
 1. Calculate base effort
@@ -55,6 +56,19 @@ Please perform the following calculations for each deliverable:
 3. Adjust for risks
 4. Calculate final effort and cost
 5. Evaluate reliability
+
+IMPORTANT: Financial Summary Calculation Rules:
+- total_effort_days = sum of all deliverable final_effort_days
+- subtotal = sum of all deliverable costs
+- tax = subtotal × tax_rate (if applicable)
+- total = subtotal + tax
+- Ensure financial_summary.total exactly matches the sum of all deliverable costs
+
+CRITICAL JSON FORMAT REQUIREMENT:
+- In the financial_summary section, provide ONLY calculated numeric values
+- DO NOT include calculation formulas or expressions like "6.5 + 10.4 + ..."
+- Calculate the totals yourself and provide the final numbers only
+- Example: "total_effort_days": 191.24 (not "6.5 + 10.4 + ...")
 
 Please return results in the specified Pydantic model format.
 """
@@ -87,8 +101,18 @@ Based on the above information, please execute effort estimation and cost calcul
 Please adjust effort considering the content of evaluation feedback.
 """
         
-        # Use Pydantic structured output
-        result = self.execute_with_pydantic(user_input, EstimationResult, evaluation_feedback)
+        # Use Pydantic structured output with currency information
+        currency_info = currency_formatter.get_currency_info()
+        
+        # Add currency information to the user input
+        enhanced_user_input = user_input + f"""
+
+[CURRENCY SETTINGS]
+Daily Rate: {currency_info['daily_rate']} {currency_info['currency']}
+Currency: {currency_info['currency']}
+"""
+        
+        result = self.execute_with_pydantic(enhanced_user_input, EstimationResult, evaluation_feedback)
         
         # Wrap results on success
         if result.get("success"):
@@ -132,7 +156,8 @@ Difference: {curr_total - prev_total:+.1f} person-days
 [UPDATED EVALUATION RESULTS]
 {evaluation_updates if evaluation_updates else 'No updates'}
 
-⚠️[IMPORTANT] Please be sure to recalculate the estimate reflecting the user's modification request.
+⚠️[CRITICAL] You MUST recalculate the estimate reflecting the user's modification request.
+The estimate MUST change from the previous version. Identical results are NOT acceptable.
 
 Specific changes due to modification request:
 1. Add/change technical requirements pointed out in feedback
@@ -140,12 +165,32 @@ Specific changes due to modification request:
 3. Accurately calculate the impact on effort and cost
 4. Update technical prerequisites (libraries, performance requirements, etc.)
 5. Identify new risk factors
+6. ADD NEW DELIVERABLES if required by the modification request
 
-[Example: When 5-second response time requirement is added]
-- Add performance optimization effort
-- Add cache/CDN implementation effort
-- Add database optimization effort
-- Add library selection (Redis, Nginx, etc.) to technical prerequisites
+[Example: When performance requirements like "10,000 concurrent users, sub-2-second response time" are added]
+- ADD "Performance Optimization" deliverable (15-30 person-days)
+- ADD "Load Testing & Performance Tuning" deliverable (10-20 person-days)
+- INCREASE Backend Development effort (+20-50%)
+- INCREASE Frontend Development effort (+15-30%)
+- ADD cache/CDN implementation effort
+- ADD database optimization effort
+- ADD library selection (Redis, Nginx, etc.) to technical prerequisites
+- UPDATE technical assumptions with performance requirements
+
+MANDATORY: If user mentions performance requirements (concurrent users, response time), you MUST add performance-related deliverables.
+
+IMPORTANT: Financial Summary Calculation Rules:
+- total_effort_days = sum of all deliverable final_effort_days
+- subtotal = sum of all deliverable costs
+- tax = subtotal × tax_rate (if applicable)
+- total = subtotal + tax
+- Ensure financial_summary.total exactly matches the sum of all deliverable costs
+
+CRITICAL JSON FORMAT REQUIREMENT:
+- In the financial_summary section, provide ONLY calculated numeric values
+- DO NOT include calculation formulas or expressions like "6.5 + 10.4 + ..."
+- Calculate the totals yourself and provide the final numbers only
+- Example: "total_effort_days": 191.24 (not "6.5 + 10.4 + ...")
 
 The estimate results must be changed from the previous version. Same results are not acceptable.
 """
@@ -158,8 +203,18 @@ The estimate results must be changed from the previous version. Same results are
             "requires_recalculation": True
         }
         
-        # Use Pydantic structured output
-        result = self.execute_with_pydantic(user_input, EstimationResult, additional_context)
+        # Use Pydantic structured output with currency information
+        currency_info = currency_formatter.get_currency_info()
+        
+        # Add currency information to the user input
+        enhanced_user_input = user_input + f"""
+
+[CURRENCY SETTINGS]
+Daily Rate: {currency_info['daily_rate']} {currency_info['currency']}
+Currency: {currency_info['currency']}
+"""
+        
+        result = self.execute_with_pydantic(enhanced_user_input, EstimationResult, additional_context)
         
         # Wrap results on success
         if result.get("success"):

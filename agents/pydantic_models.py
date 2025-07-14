@@ -14,7 +14,7 @@ class DeliverableEstimate(BaseModel):
     complexity_multiplier: float = Field(description="Complexity multiplier")
     risk_multiplier: float = Field(description="Risk multiplier")
     final_effort_days: float = Field(description="Final effort (person-days)")
-    cost_jpy: int = Field(description="Cost (JPY)")
+    cost: float = Field(description="Cost in configured currency")
     confidence_score: float = Field(description="Confidence score (0-1)")
     rationale: str = Field(description="Estimation rationale")
 
@@ -22,15 +22,16 @@ class DeliverableEstimate(BaseModel):
 class FinancialSummary(BaseModel):
     """Financial Summary"""
     total_effort_days: float = Field(description="Total effort (person-days)")
-    subtotal_jpy: int = Field(description="Subtotal (JPY)")
-    tax_jpy: int = Field(description="Tax (JPY)")
-    total_jpy: int = Field(description="Total amount (JPY)")
+    subtotal: float = Field(description="Subtotal in configured currency")
+    tax: float = Field(description="Tax in configured currency")
+    total: float = Field(description="Total amount in configured currency")
 
 
 class TechnicalAssumptions(BaseModel):
     """Technical Assumptions"""
     engineer_level: str = Field(description="Engineer level")
-    daily_rate_jpy: int = Field(description="Daily rate (JPY)")
+    daily_rate: float = Field(description="Daily rate in configured currency")
+    currency: str = Field(description="Currency code (USD, JPY, EUR, etc.)")
     development_stack: str = Field(description="Assumed technology stack")
     team_size: int = Field(description="Assumed team size")
     project_duration_months: int = Field(description="Assumed duration (months)")

@@ -9,6 +9,7 @@ import traceback
 from typing import Dict, Any, List
 
 from config.i18n_config import t
+from utils.currency_utils import currency_formatter
 
 from agents.estimation_agent_v2 import EstimationAgentV2
 from agents.business_requirements_agent_v2 import BusinessRequirementsAgentV2
@@ -61,8 +62,11 @@ class SimpleWorkflowOrchestrator:
             return state
             
         except Exception as e:
+            import traceback
             error_msg = f"❌ {t('errors.system.workflow_error', error=str(e))}"
             print(error_msg)
+            if DEBUG_MODE:
+                print(f"Error traceback: {traceback.format_exc()}")
             state["errors"] = state.get("errors", []) + [error_msg]
             return state
     
@@ -330,38 +334,75 @@ class SimpleWorkflowOrchestrator:
     
     def _execute_estimation_generation(self, state: EstimationState) -> EstimationState:
         """Execute estimation generation"""
-        print(f"💰 {t('workflow.estimation.generation_start')}")
-        
-        if not is_evaluation_complete(state):
-            error_msg = "Parallel evaluation not completed"
-            state["errors"] = state.get("errors", []) + [error_msg]
-            return state
-        
-        # Integrate evaluation results
-        evaluation_feedback = {
-            "business_evaluation": state.get("business_evaluation"),
-            "quality_evaluation": state.get("quality_evaluation"),
-            "constraints_evaluation": state.get("constraints_evaluation")
-        }
-        
         try:
+            if DEBUG_MODE:
+                print(f"[DEBUG] _execute_estimation_generation called")
+                print(f"[DEBUG] state keys: {list(state.keys()) if state else 'None'}")
+            
+            print(f"💰 {t('workflow.estimation.generation_start')}")
+            
+            # Check if evaluation is complete
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking if evaluation is complete...")
+            
+            if not is_evaluation_complete(state):
+                error_msg = "Parallel evaluation not completed"
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Evaluation not complete: {error_msg}")
+                state["errors"] = state.get("errors", []) + [error_msg]
+                return state
+            
+            if DEBUG_MODE:
+                print(f"[DEBUG] Evaluation complete, proceeding with estimation generation...")
+            
+            # Integrate evaluation results
+            evaluation_feedback = {
+                "business_evaluation": state.get("business_evaluation"),
+                "quality_evaluation": state.get("quality_evaluation"),
+                "constraints_evaluation": state.get("constraints_evaluation")
+            }
+            
+            if DEBUG_MODE:
+                print(f"[DEBUG] evaluation_feedback keys: {list(evaluation_feedback.keys())}")
+                print(f"[DEBUG] deliverables_memory type: {type(state.get('deliverables_memory'))}")
+                print(f"[DEBUG] deliverables_memory length: {len(state.get('deliverables_memory', []))}")
+            
             print(f"  🧮 {t('workflow.estimation.calculating')}")
+            
+            if DEBUG_MODE:
+                print(f"[DEBUG] Calling estimation_agent.generate_estimate...")
+            
             result = self.estimation_agent.generate_estimate(
                 state["deliverables_memory"],
                 state["system_requirements"],
                 evaluation_feedback
             )
             
+            if DEBUG_MODE:
+                print(f"[DEBUG] Estimation agent result: {result}")
+                print(f"[DEBUG] Result type: {type(result)}")
+                print(f"[DEBUG] Result success: {result.get('success') if isinstance(result, dict) else 'Not a dict'}")
+            
             state = log_agent_execution(state, "EstimationAgent", result)
             if result.get("success"):
                 state = update_evaluation_result(state, "EstimationAgent", result)
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Estimation result updated in state")
+            else:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Estimation failed: {result.get('error', 'Unknown error')}")
             
             state["current_step"] = "estimation_complete"
             print(f"✅ {t('workflow.estimation.generation_complete')}")
             return state
             
         except Exception as e:
-            state["errors"] = state.get("errors", []) + [f"Estimation generation error: {str(e)}"]
+            error_msg = f"Estimation generation error: {str(e)}"
+            if DEBUG_MODE:
+                import traceback
+                print(f"[DEBUG] Exception in _execute_estimation_generation: {str(e)}")
+                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+            state["errors"] = state.get("errors", []) + [error_msg]
             return state
     
     def _execute_user_interaction_loop(self, state: EstimationState) -> EstimationState:
@@ -479,138 +520,305 @@ class SimpleWorkflowOrchestrator:
     
     def _display_current_results(self, state: EstimationState):
         """Display current results - detailed version"""
-        print("\n" + "="*80)
-        print(f"📋 {t('workflow.display.detailed_report_title')}")
-        print("="*80)
-        
-        # 1. Evaluation summary
-        summary = get_evaluation_summary(state)
-        print(f"📊 {t('workflow.display.evaluation_status')}")
-        print(f"  {t('workflow.display.business_requirements')}: {'✅' if summary['business_complete'] else '❌'}")
-        print(f"  {t('workflow.display.quality_requirements')}: {'✅' if summary['quality_complete'] else '❌'}")
-        print(f"  {t('workflow.display.constraints_requirements')}: {'✅' if summary['constraints_complete'] else '❌'}")
-        print(f"  {t('workflow.display.estimation_generation')}: {'✅' if summary['estimation_complete'] else '❌'}")
-        
-        # 2. Detailed evaluation results for each agent
-        self._display_agent_evaluations(state)
-        
-        # 3. Estimation results
-        if state.get("estimation_result") and state["estimation_result"].get("success"):
-            est_result = state["estimation_result"]["estimation_result"]
-            print(f"\n💰 {t('workflow.display.estimation_result')}")
-            print(f"  {t('workflow.display.total_effort', days=est_result['financial_summary']['total_effort_days'])}")
-            print(f"  {t('workflow.display.total_amount', amount=est_result['financial_summary']['total_jpy'])}")
-            print(f"  {t('workflow.display.confidence', confidence=est_result['overall_confidence'])}")
+        try:
+            if DEBUG_MODE:
+                print(f"\n[DEBUG] _display_current_results called with state keys: {list(state.keys()) if state else 'None'}")
+                print(f"[DEBUG] state type: {type(state)}")
+                if state:
+                    print(f"[DEBUG] estimation_result in state: {'estimation_result' in state}")
+                    if 'estimation_result' in state:
+                        est_res = state['estimation_result']
+                        print(f"[DEBUG] estimation_result type: {type(est_res)}")
+                        print(f"[DEBUG] estimation_result value: {est_res}")
             
-            # 4. Detailed breakdown by all deliverables (no omissions)
-            self._display_all_deliverable_estimates(est_result)
+            print("\n" + "="*80)
+            print(f"📋 {t('workflow.display.detailed_report_title')}")
+            print("="*80)
             
-            # 5. Major risks and recommendations
-            self._display_risks_and_recommendations(est_result, state)
-        
-        # 6. Errors and warnings
-        if state.get("errors"):
-            print(f"\n❌ Number of errors: {len(state['errors'])}")
-            for error in state["errors"][-3:]:  # Show only the latest 3
-                print(f"  - {error}")
-        
-        if state.get("warnings"):
-            print(f"⚠️ Number of warnings: {len(state['warnings'])}")
+            # 1. Evaluation summary
+            if DEBUG_MODE:
+                print(f"[DEBUG] Getting evaluation summary...")
+            summary = get_evaluation_summary(state)
+            if DEBUG_MODE:
+                print(f"[DEBUG] Summary: {summary}")
+            
+            print(f"📊 {t('workflow.display.evaluation_status')}")
+            print(f"  {t('workflow.display.business_requirements')}: {'✅' if summary['business_complete'] else '❌'}")
+            print(f"  {t('workflow.display.quality_requirements')}: {'✅' if summary['quality_complete'] else '❌'}")
+            print(f"  {t('workflow.display.constraints_requirements')}: {'✅' if summary['constraints_complete'] else '❌'}")
+            print(f"  {t('workflow.display.estimation_generation')}: {'✅' if summary['estimation_complete'] else '❌'}")
+            
+            # 2. Detailed evaluation results for each agent
+            if DEBUG_MODE:
+                print(f"[DEBUG] Displaying agent evaluations...")
+            self._display_agent_evaluations(state)
+            
+            # 3. Estimation results
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking estimation results...")
+                print(f"[DEBUG] state.get('estimation_result'): {state.get('estimation_result')}")
+            
+            if state.get("estimation_result") and state["estimation_result"].get("success"):
+                est_result = state["estimation_result"].get("estimation_result")
+                if DEBUG_MODE:
+                    print(f"[DEBUG] est_result: {est_result}")
+                    print(f"[DEBUG] est_result type: {type(est_result)}")
+                
+                if est_result:
+                    print(f"\n💰 {t('workflow.display.estimation_result')}")
+                    
+                    # Calculate accurate totals from individual deliverables
+                    deliverable_estimates = est_result.get('deliverable_estimates', [])
+                    total_effort = sum(item.get('final_effort_days', 0) for item in deliverable_estimates)
+                    total_cost = sum(item.get('cost', 0) for item in deliverable_estimates)
+                    
+                    # Calculate weighted average confidence
+                    total_confidence_weighted = sum(item.get('confidence_score', 0) * item.get('final_effort_days', 0) for item in deliverable_estimates)
+                    avg_confidence = total_confidence_weighted / total_effort if total_effort > 0 else 0
+                    
+                    print(f"  {t('workflow.display.total_effort', days=total_effort)}")
+                    print(f"  {t('workflow.display.total_amount', amount=currency_formatter.format_amount(total_cost))}")
+                    print(f"  {t('workflow.display.confidence', confidence=round(avg_confidence, 2))}")
+                    
+                    # 4. Detailed breakdown by all deliverables (no omissions)
+                    if DEBUG_MODE:
+                        print(f"[DEBUG] Displaying deliverable estimates...")
+                    self._display_all_deliverable_estimates(est_result)
+                    
+                    # 5. Major risks and recommendations
+                    if DEBUG_MODE:
+                        print(f"[DEBUG] Displaying risks and recommendations...")
+                    self._display_risks_and_recommendations(est_result, state)
+                else:
+                    print(f"\n💰 Estimation Results: ❌ Estimation data not available")
+            else:
+                estimation_result = state.get("estimation_result")
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Estimation failed. estimation_result: {estimation_result}")
+                if estimation_result:
+                    error_msg = estimation_result.get("error", "Unknown estimation error")
+                    print(f"\n💰 Estimation Results: ❌ {error_msg}")
+                else:
+                    print(f"\n💰 Estimation Results: ❌ Estimation not completed")
+            
+            # 6. Errors and warnings
+            if state.get("errors"):
+                print(f"\n❌ Number of errors: {len(state['errors'])}")
+                for error in state["errors"][-3:]:  # Show only the latest 3
+                    print(f"  - {error}")
+            
+            if state.get("warnings"):
+                print(f"⚠️ Number of warnings: {len(state['warnings'])}")
+                
+        except Exception as e:
+            print(f"\n❌ Error displaying results: {str(e)}")
+            if DEBUG_MODE:
+                import traceback
+                print(f"[DEBUG] Display error traceback: {traceback.format_exc()}")
+                print(f"[DEBUG] Error occurred at line: {traceback.extract_tb(e.__traceback__)[-1].lineno}")
     
     def _display_agent_evaluations(self, state: EstimationState):
         """Display detailed evaluation results for each agent"""
-        print(f"\n🤖 {t('workflow.display.agent_evaluation_details')}")
-        print("-" * 60)
-        
-        # Business & functional requirements agent evaluation
-        if state.get("business_evaluation"):
-            business_eval = state["business_evaluation"]
-            if business_eval.get("success"):
-                print(f"📋 {t('workflow.display.business_agent_evaluation')}")
-                if isinstance(business_eval, dict) and "overall_score" in business_eval:
-                    print(f"  Overall Score: {business_eval.get('overall_score', 'N/A')}/100")
-                    print(f"  Business Purpose Clarity: {business_eval.get('business_purpose', {}).get('clarity_score', 'N/A')}/100")
-                    print(f"  Functional Requirements Completeness: {business_eval.get('functional_requirements', {}).get('completeness_score', 'N/A')}/100")
-                    print(f"  Major Risks: {', '.join(business_eval.get('risk_factors', [])[:3])}")
+        try:
+            if DEBUG_MODE:
+                print(f"[DEBUG] _display_agent_evaluations called")
+                print(f"[DEBUG] state keys: {list(state.keys()) if state else 'None'}")
+            
+            print(f"\n🤖 {t('workflow.display.agent_evaluation_details')}")
+            print("-" * 60)
+            
+            # Business & functional requirements agent evaluation
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking business_evaluation...")
+            if state.get("business_evaluation"):
+                business_eval = state["business_evaluation"]
+                if DEBUG_MODE:
+                    print(f"[DEBUG] business_eval: {business_eval}")
+                    print(f"[DEBUG] business_eval type: {type(business_eval)}")
+                if business_eval.get("success"):
+                    print(f"📋 {t('workflow.display.business_agent_evaluation')}")
+                    if isinstance(business_eval, dict) and "overall_score" in business_eval:
+                        print(f"  Overall Score: {business_eval.get('overall_score', 'N/A')}/100")
+                        print(f"  Business Purpose Clarity: {business_eval.get('business_purpose', {}).get('clarity_score', 'N/A')}/100")
+                        print(f"  Functional Requirements Completeness: {business_eval.get('functional_requirements', {}).get('completeness_score', 'N/A')}/100")
+                        print(f"  Major Risks: {', '.join(business_eval.get('risk_factors', [])[:3])}")
+                    else:
+                        print(f"  {t('workflow.display.evaluation_data')}: {str(business_eval)[:200]}...")
                 else:
-                    print(f"  {t('workflow.display.evaluation_data')}: {str(business_eval)[:200]}...")
+                    print(f"📋 Business & Functional Requirements Agent: Error - {business_eval.get('error', 'Unknown')}")
             else:
-                print(f"📋 Business & Functional Requirements Agent: Error - {business_eval.get('error', 'Unknown')}")
-        
-        # Quality & non-functional requirements agent evaluation
-        if state.get("quality_evaluation"):
-            quality_eval = state["quality_evaluation"]
-            if quality_eval.get("success"):
-                print(f"\n🎯 {t('workflow.display.quality_agent_evaluation')}")
-                if isinstance(quality_eval, dict) and "overall_score" in quality_eval:
-                    print(f"  Overall Score: {quality_eval.get('overall_score', 'N/A')}/100")
-                    print(f"  Performance Requirements: {quality_eval.get('performance_requirements', {}).get('definition_score', 'N/A')}/100")
-                    print(f"  Security Requirements: {quality_eval.get('security_requirements', {}).get('completeness_score', 'N/A')}/100")
-                    print(f"  Effort Impact: +{quality_eval.get('total_effort_impact', 'N/A')}%")
+                print(f"📋 Business & Functional Requirements Agent: ❌ Not executed")
+            
+            # Quality & non-functional requirements agent evaluation
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking quality_evaluation...")
+            if state.get("quality_evaluation"):
+                quality_eval = state["quality_evaluation"]
+                if DEBUG_MODE:
+                    print(f"[DEBUG] quality_eval: {quality_eval}")
+                    print(f"[DEBUG] quality_eval type: {type(quality_eval)}")
+                if quality_eval.get("success"):
+                    print(f"\n🎯 {t('workflow.display.quality_agent_evaluation')}")
+                    if isinstance(quality_eval, dict) and "overall_score" in quality_eval:
+                        print(f"  Overall Score: {quality_eval.get('overall_score', 'N/A')}/100")
+                        print(f"  Performance Requirements: {quality_eval.get('performance_requirements', {}).get('definition_score', 'N/A')}/100")
+                        print(f"  Security Requirements: {quality_eval.get('security_requirements', {}).get('completeness_score', 'N/A')}/100")
+                        print(f"  Effort Impact: +{quality_eval.get('total_effort_impact', 'N/A')}%")
+                    else:
+                        print(f"  {t('workflow.display.evaluation_data')}: {str(quality_eval)[:200]}...")
                 else:
-                    print(f"  {t('workflow.display.evaluation_data')}: {str(quality_eval)[:200]}...")
+                    print(f"🎯 Quality & Non-Functional Requirements Agent: Error - {quality_eval.get('error', 'Unknown')}")
             else:
-                print(f"🎯 Quality & Non-Functional Requirements Agent: Error - {quality_eval.get('error', 'Unknown')}")
-        
-        # Constraints & external integration requirements agent evaluation
-        if state.get("constraints_evaluation"):
-            constraints_eval = state["constraints_evaluation"]
-            if constraints_eval.get("success"):
-                print(f"\n🔒 {t('workflow.display.constraints_agent_evaluation')}")
-                if isinstance(constraints_eval, dict) and "overall_score" in constraints_eval:
-                    print(f"  Overall Score: {constraints_eval.get('overall_score', 'N/A')}/100")
-                    print(f"  Technical Constraints Clarity: {constraints_eval.get('technical_constraints', {}).get('clarity_score', 'N/A')}/100")
-                    print(f"  External Integration Specifications: {constraints_eval.get('external_integrations', {}).get('specification_score', 'N/A')}/100")
-                    print(f"  Feasibility Risks: {', '.join(constraints_eval.get('feasibility_risks', [])[:3])}")
+                print(f"🎯 Quality & Non-Functional Requirements Agent: ❌ Not executed")
+            
+            # Constraints & external integration requirements agent evaluation
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking constraints_evaluation...")
+            if state.get("constraints_evaluation"):
+                constraints_eval = state["constraints_evaluation"]
+                if DEBUG_MODE:
+                    print(f"[DEBUG] constraints_eval: {constraints_eval}")
+                    print(f"[DEBUG] constraints_eval type: {type(constraints_eval)}")
+                if constraints_eval.get("success"):
+                    print(f"\n🔒 {t('workflow.display.constraints_agent_evaluation')}")
+                    if isinstance(constraints_eval, dict) and "overall_score" in constraints_eval:
+                        print(f"  Overall Score: {constraints_eval.get('overall_score', 'N/A')}/100")
+                        print(f"  Technical Constraints Clarity: {constraints_eval.get('technical_constraints', {}).get('clarity_score', 'N/A')}/100")
+                        print(f"  External Integration Specifications: {constraints_eval.get('external_integrations', {}).get('specification_score', 'N/A')}/100")
+                        print(f"  Feasibility Risks: {', '.join(constraints_eval.get('feasibility_risks', [])[:3])}")
+                    else:
+                        print(f"  {t('workflow.display.evaluation_data')}: {str(constraints_eval)[:200]}...")
                 else:
-                    print(f"  {t('workflow.display.evaluation_data')}: {str(constraints_eval)[:200]}...")
+                    print(f"🔒 Constraints & External Integration Requirements Agent: Error - {constraints_eval.get('error', 'Unknown')}")
             else:
-                print(f"🔒 Constraints & External Integration Requirements Agent: Error - {constraints_eval.get('error', 'Unknown')}")
+                print(f"🔒 Constraints & External Integration Requirements Agent: ❌ Not executed")
+                
+        except Exception as e:
+            print(f"❌ Error displaying agent evaluations: {str(e)}")
+            if DEBUG_MODE:
+                import traceback
+                print(f"[DEBUG] Agent evaluation display error traceback: {traceback.format_exc()}")
+                print(f"[DEBUG] Error occurred at line: {traceback.extract_tb(e.__traceback__)[-1].lineno}")
     
     def _display_all_deliverable_estimates(self, est_result: Dict[str, Any]):
         """Display estimates for all deliverables (no omissions)"""
-        print(f"\n📋 {t('workflow.display.deliverable_estimates_detail')}")
-        print("-" * 80)
-        print(f"{t('workflow.display.table_headers.no'):<4} {t('workflow.display.table_headers.deliverable_name'):<25} {t('workflow.display.table_headers.base_effort'):<8} {t('workflow.display.table_headers.final_effort'):<8} {t('workflow.display.table_headers.amount'):<12} {t('workflow.display.table_headers.confidence'):<6}")
-        print("-" * 80)
-        
-        deliverable_estimates = est_result.get('deliverable_estimates', [])
-        for i, item in enumerate(deliverable_estimates, 1):
-            name = item.get('name', 'N/A')[:23]  # Character limit
-            base_effort = item.get('base_effort_days', 0)
-            final_effort = item.get('final_effort_days', 0)
-            cost = item.get('cost_jpy', 0)
-            confidence = item.get('confidence_score', 0)
+        try:
+            if DEBUG_MODE:
+                print(f"[DEBUG] _display_all_deliverable_estimates called")
+                print(f"[DEBUG] est_result type: {type(est_result)}")
+                print(f"[DEBUG] est_result keys: {list(est_result.keys()) if est_result else 'None'}")
             
-            print(f"{i:<4} {name:<25} {base_effort:<8.1f} {final_effort:<8.1f} ¥{cost:<11,} {confidence:<6.2f}")
-        
-        print("-" * 80)
-        financial_summary = est_result.get('financial_summary', {})
-        print(f"{t('workflow.display.table_headers.total'):<4} {'':<25} {'':<8} {financial_summary.get('total_effort_days', 0):<8.1f} ¥{financial_summary.get('total_jpy', 0):<11,}")
+            if not est_result:
+                print(f"\n📋 {t('workflow.display.deliverable_estimates_detail')}: ❌ No estimation result data")
+                return
+            
+            print(f"\n📋 {t('workflow.display.deliverable_estimates_detail')}")
+            print("-" * 80)
+            print(f"{t('workflow.display.table_headers.no'):<4} {t('workflow.display.table_headers.deliverable_name'):<25} {t('workflow.display.table_headers.base_effort'):<8} {t('workflow.display.table_headers.final_effort'):<8} {t('workflow.display.table_headers.amount'):<12} {t('workflow.display.table_headers.confidence'):<6}")
+            print("-" * 80)
+            
+            deliverable_estimates = est_result.get('deliverable_estimates', [])
+            if DEBUG_MODE:
+                print(f"[DEBUG] deliverable_estimates: {deliverable_estimates}")
+                print(f"[DEBUG] deliverable_estimates length: {len(deliverable_estimates)}")
+            
+            if not deliverable_estimates:
+                print("No deliverable estimates available")
+            else:
+                for i, item in enumerate(deliverable_estimates, 1):
+                    if DEBUG_MODE:
+                        print(f"[DEBUG] Processing item {i}: {item}")
+                    name = item.get('name', 'N/A')[:23]  # Character limit
+                    base_effort = item.get('base_effort_days', 0)
+                    final_effort = item.get('final_effort_days', 0)
+                    cost = item.get('cost', 0)
+                    confidence = item.get('confidence_score', 0)
+                    
+                    print(f"{i:<4} {name:<25} {base_effort:<8.1f} {final_effort:<8.1f} {currency_formatter.format_amount(cost):<15} {confidence:<6.2f}")
+            
+            print("-" * 80)
+            
+            # Calculate accurate totals from individual deliverables
+            deliverable_estimates = est_result.get('deliverable_estimates', [])
+            total_effort = sum(item.get('final_effort_days', 0) for item in deliverable_estimates)
+            total_cost = sum(item.get('cost', 0) for item in deliverable_estimates)
+            
+            if DEBUG_MODE:
+                financial_summary = est_result.get('financial_summary', {})
+                print(f"[DEBUG] AI financial_summary: {financial_summary}")
+                print(f"[DEBUG] Calculated total_effort: {total_effort}")
+                print(f"[DEBUG] Calculated total_cost: {total_cost}")
+            
+            print(f"{t('workflow.display.table_headers.total'):<4} {'':<25} {'':<8} {total_effort:<8.1f} {currency_formatter.format_amount(total_cost):<15}")
+            
+        except Exception as e:
+            print(f"❌ Error displaying deliverable estimates: {str(e)}")
+            if DEBUG_MODE:
+                import traceback
+                print(f"[DEBUG] Deliverable estimates display error traceback: {traceback.format_exc()}")
+                print(f"[DEBUG] Error occurred at line: {traceback.extract_tb(e.__traceback__)[-1].lineno}")
     
     def _display_risks_and_recommendations(self, est_result: Dict[str, Any], state: EstimationState = None):
         """Display major risks and recommendations"""
-        print(f"\n⚠️ {t('workflow.display.main_risks')}")
-        key_risks = est_result.get('key_risks', [])
-        for i, risk in enumerate(key_risks, 1):
-            print(f"  {i}. {risk}")
-        
-        print(f"\n💡 {t('workflow.display.recommendations')}")
-        recommendations = est_result.get('recommendations', [])
-        for i, rec in enumerate(recommendations, 1):
-            print(f"  {i}. {rec}")
-        
-        print(f"\n🔧 {t('workflow.display.technical_assumptions')}")
-        tech_assumptions = est_result.get('technical_assumptions', {})
-        print(f"  {t('workflow.display.engineer_level', level=tech_assumptions.get('engineer_level', 'N/A'))}")
-        print(f"  {t('workflow.display.daily_rate', rate=tech_assumptions.get('daily_rate_jpy', 'N/A'))}")
-        print(f"  {t('workflow.display.development_stack', stack=tech_assumptions.get('development_stack', 'N/A'))}")
-        print(f"  {t('workflow.display.team_size', size=tech_assumptions.get('team_size', 'N/A'))}")
-        print(f"  {t('workflow.display.project_duration', duration=tech_assumptions.get('project_duration_months', 'N/A'))}")
-        
-        # Add history display (only when state is available)
-        if state is not None:
-            self._display_iteration_history(state)
+        try:
+            if DEBUG_MODE:
+                print(f"[DEBUG] _display_risks_and_recommendations called")
+                print(f"[DEBUG] est_result type: {type(est_result)}")
+                print(f"[DEBUG] est_result keys: {list(est_result.keys()) if est_result else 'None'}")
+            
+            if not est_result:
+                print(f"\n⚠️ {t('workflow.display.main_risks')}: ❌ No estimation result data")
+                return
+            
+            print(f"\n⚠️ {t('workflow.display.main_risks')}")
+            key_risks = est_result.get('key_risks', [])
+            if DEBUG_MODE:
+                print(f"[DEBUG] key_risks: {key_risks}")
+            
+            if not key_risks:
+                print("  No major risks identified")
+            else:
+                for i, risk in enumerate(key_risks, 1):
+                    print(f"  {i}. {risk}")
+            
+            print(f"\n💡 {t('workflow.display.recommendations')}")
+            recommendations = est_result.get('recommendations', [])
+            if DEBUG_MODE:
+                print(f"[DEBUG] recommendations: {recommendations}")
+            
+            if not recommendations:
+                print("  No specific recommendations available")
+            else:
+                for i, rec in enumerate(recommendations, 1):
+                    print(f"  {i}. {rec}")
+            
+            print(f"\n🔧 {t('workflow.display.technical_assumptions')}")
+            tech_assumptions = est_result.get('technical_assumptions', {})
+            if DEBUG_MODE:
+                print(f"[DEBUG] tech_assumptions: {tech_assumptions}")
+            
+            daily_rate = tech_assumptions.get('daily_rate', 'N/A')
+            currency_code = tech_assumptions.get('currency', currency_formatter.get_currency_code())
+            daily_rate_formatted = currency_formatter.format_amount(daily_rate) if daily_rate != 'N/A' else 'N/A'
+            
+            print(f"  {t('workflow.display.engineer_level', level=tech_assumptions.get('engineer_level', 'N/A'))}")
+            print(f"  {t('workflow.display.daily_rate', rate=daily_rate_formatted)}")
+            print(f"  {t('workflow.display.development_stack', stack=tech_assumptions.get('development_stack', 'N/A'))}")
+            print(f"  {t('workflow.display.team_size', size=tech_assumptions.get('team_size', 'N/A'))}")
+            print(f"  {t('workflow.display.project_duration', duration=tech_assumptions.get('project_duration_months', 'N/A'))}")
+            
+            # Add history display (only when state is available)
+            if state is not None:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Displaying iteration history...")
+                self._display_iteration_history(state)
+                
+        except Exception as e:
+            print(f"❌ Error displaying risks and recommendations: {str(e)}")
+            if DEBUG_MODE:
+                import traceback
+                print(f"[DEBUG] Risks and recommendations display error traceback: {traceback.format_exc()}")
+                print(f"[DEBUG] Error occurred at line: {traceback.extract_tb(e.__traceback__)[-1].lineno}")
     
     def _display_iteration_history(self, state: EstimationState):
         """Display iteration history"""
@@ -634,8 +842,11 @@ class SimpleWorkflowOrchestrator:
 
             if tech_assumptions:
                 print(f"  Technical Assumptions:")
+                daily_rate = tech_assumptions.get('daily_rate', 'N/A')
+                daily_rate_formatted = currency_formatter.format_amount(daily_rate) if daily_rate != 'N/A' else 'N/A'
+                
                 print(f"    - Development Stack: {tech_assumptions.get('development_stack', 'N/A')}")
-                print(f"    - Daily Rate: ¥{tech_assumptions.get('daily_rate_jpy', 'N/A'):,}")
+                print(f"    - Daily Rate: {daily_rate_formatted}")
 
                 # Display special requirements like performance requirements
                 special_requirements = []
@@ -661,12 +872,12 @@ class SimpleWorkflowOrchestrator:
             if first_est and last_est:
                 first_total = first_est.get("total_effort_days", 0)
                 last_total = last_est.get("total_effort_days", 0)
-                first_cost = first_est.get("total_jpy", 0)
-                last_cost = last_est.get("total_jpy", 0)
+                first_cost = first_est.get("total", 0)
+                last_cost = last_est.get("total", 0)
                 
                 print(f"\n📈 Cumulative Changes from Modification Requests:")
                 print(f"  Effort Change: {first_total:.1f} person-days → {last_total:.1f} person-days ({last_total-first_total:+.1f} person-days)")
-                print(f"  Cost Change: ¥{first_cost:,} → ¥{last_cost:,} (¥{last_cost-first_cost:+,})")
+                print(f"  Cost Change: {currency_formatter.format_amount(first_cost)} → {currency_formatter.format_amount(last_cost)} ({currency_formatter.format_amount(last_cost-first_cost):+})")
                 
                 if first_total > 0:
                     effort_change_pct = ((last_total - first_total) / first_total) * 100

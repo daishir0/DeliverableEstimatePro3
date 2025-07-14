@@ -71,22 +71,88 @@ def update_evaluation_result(state: EstimationState, agent_name: str, result: Di
 
 def is_evaluation_complete(state: EstimationState) -> bool:
     """Check if all required evaluations are complete"""
-    required_evaluations = ["business_evaluation", "quality_evaluation", "constraints_evaluation"]
+    import os
+    DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
     
-    for eval_key in required_evaluations:
-        if not state.get(eval_key) or not state[eval_key].get("success"):
-            return False
-    
-    return True
+    try:
+        if DEBUG_MODE:
+            print(f"[DEBUG] is_evaluation_complete called")
+            print(f"[DEBUG] state keys: {list(state.keys()) if state else 'None'}")
+        
+        required_evaluations = ["business_evaluation", "quality_evaluation", "constraints_evaluation"]
+        
+        for eval_key in required_evaluations:
+            eval_result = state.get(eval_key)
+            if DEBUG_MODE:
+                print(f"[DEBUG] Checking {eval_key}: {eval_result}")
+            
+            # Safe handling of None values
+            if not eval_result:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] {eval_key} is None or missing")
+                return False
+            
+            if not eval_result.get("success"):
+                if DEBUG_MODE:
+                    print(f"[DEBUG] {eval_key} success is False")
+                return False
+        
+        if DEBUG_MODE:
+            print(f"[DEBUG] All evaluations complete: True")
+        return True
+        
+    except Exception as e:
+        if DEBUG_MODE:
+            import traceback
+            print(f"[DEBUG] Error in is_evaluation_complete: {str(e)}")
+            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+        return False
 
 def get_evaluation_summary(state: EstimationState) -> Dict[str, bool]:
     """Get summary of evaluation completion status"""
-    return {
-        "business_complete": bool(state.get("business_evaluation", {}).get("success")),
-        "quality_complete": bool(state.get("quality_evaluation", {}).get("success")),
-        "constraints_complete": bool(state.get("constraints_evaluation", {}).get("success")),
-        "estimation_complete": bool(state.get("estimation_result", {}).get("success"))
-    }
+    import os
+    DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    
+    try:
+        if DEBUG_MODE:
+            print(f"[DEBUG] get_evaluation_summary called")
+            print(f"[DEBUG] state type: {type(state)}")
+            print(f"[DEBUG] state keys: {list(state.keys()) if state else 'None'}")
+            if state:
+                print(f"[DEBUG] business_evaluation: {state.get('business_evaluation')}")
+                print(f"[DEBUG] quality_evaluation: {state.get('quality_evaluation')}")
+                print(f"[DEBUG] constraints_evaluation: {state.get('constraints_evaluation')}")
+                print(f"[DEBUG] estimation_result: {state.get('estimation_result')}")
+        
+        # Safe handling of None values
+        business_eval = state.get("business_evaluation") or {}
+        quality_eval = state.get("quality_evaluation") or {}
+        constraints_eval = state.get("constraints_evaluation") or {}
+        estimation_result = state.get("estimation_result") or {}
+        
+        summary = {
+            "business_complete": bool(business_eval.get("success")),
+            "quality_complete": bool(quality_eval.get("success")),
+            "constraints_complete": bool(constraints_eval.get("success")),
+            "estimation_complete": bool(estimation_result.get("success"))
+        }
+        
+        if DEBUG_MODE:
+            print(f"[DEBUG] evaluation summary: {summary}")
+        
+        return summary
+        
+    except Exception as e:
+        if DEBUG_MODE:
+            import traceback
+            print(f"[DEBUG] Error in get_evaluation_summary: {str(e)}")
+            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+        return {
+            "business_complete": False,
+            "quality_complete": False,
+            "constraints_complete": False,
+            "estimation_complete": False
+        }
 
 def save_iteration_to_history(state: EstimationState, user_feedback: str = "") -> EstimationState:
     """Save current iteration results to history for future reference"""
