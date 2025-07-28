@@ -1,5 +1,37 @@
 """
-Estimation Agent - PydanticOutputParser Compatible Version
+Estimation Agent - Advanced Multi-Factor Calculation Engine
+
+This agent serves as the synthesis and calculation engine for the multi-agent estimation system.
+It integrates evaluations from BusinessRequirementsAgent, QualityRequirementsAgent, and 
+ConstraintsAgent to produce comprehensive, accurate effort and cost estimates with detailed
+confidence scoring and risk assessment.
+
+Key Capabilities:
+- Multi-factor effort calculation with complexity and risk adjustments
+- Dynamic deliverable addition based on user feedback and implicit requirements
+- Iterative refinement through human-AI collaboration loops
+- Currency-aware cost calculation with tax and total computation
+- Confidence scoring based on requirement clarity and risk factors
+- Technical assumption documentation and recommendation generation
+
+Estimation Methodology:
+- Base effort estimation using industry-standard ranges for each deliverable type
+- Complexity factor application (1.0x - 1.8x) based on technical difficulty
+- Risk factor adjustment (+20% - +50%) for uncertainty and dependencies
+- Quality requirement impact integration from QualityRequirementsAgent
+- Constraint impact consideration from ConstraintsAgent analysis
+
+Revolutionary Features:
+- Tacit Knowledge Integration: Interprets human feedback to identify implicit requirements
+- Intelligent Deliverable Discovery: Automatically adds missing deliverables (e.g., performance optimization)
+- Iterative Refinement: Supports unlimited modification cycles with change tracking
+- Multi-Currency Support: Dynamic currency formatting and tax calculation
+
+Architecture Integration:
+- Final synthesis agent in the 4-agent pipeline
+- Receives structured input from 3 parallel evaluation agents
+- Produces EstimationResult with comprehensive financial and technical details
+- Supports real-time modification request processing during interactive sessions
 """
 
 from typing import Dict, Any, List
@@ -9,7 +41,46 @@ from utils.currency_utils import currency_formatter
 
 
 class EstimationAgentV2(PydanticAIAgent):
-    """Estimation Agent - Pydantic Structured Output Compatible"""
+    """
+    Advanced Multi-Factor Estimation Synthesis Engine
+    
+    This agent represents the culmination of the 4-agent estimation system, synthesizing
+    business, quality, and constraint evaluations into accurate effort and cost estimates.
+    It employs sophisticated multi-factor calculation algorithms with real-time refinement
+    capabilities based on human feedback and tacit knowledge integration.
+    
+    Core Calculation Framework:
+    Final Effort = Base Effort × Complexity Factor × Risk Factor × Quality Impact × Constraint Impact
+    
+    Base Effort Standards (Industry-calibrated):
+    - Requirements Definition: 2-8 person-days
+    - System Design: 4-12 person-days  
+    - Frontend Development: 8-25 person-days
+    - Backend Development: 10-30 person-days
+    - Database Design: 5-18 person-days
+    - Testing: 5-15 person-days
+    - Security Implementation: 3-15 person-days
+    - Deployment: 2-10 person-days
+    
+    Adjustment Factors:
+    - Complexity Multipliers: Low (1.0x), Medium (1.3x), High (1.8x)
+    - Risk Adjustments: New technology (+30%), External dependencies (+20%), 
+      Performance requirements (+25%), Advanced security (+30%)
+    
+    Revolutionary Capabilities:
+    1. Tacit Knowledge Processing: Interprets human feedback to identify unstated requirements
+    2. Dynamic Deliverable Addition: Automatically adds deliverables based on implicit needs
+    3. Iterative Refinement: Processes modification requests with change impact analysis
+    4. Confidence Scoring: Provides reliability assessment for each estimate component
+    5. Multi-Currency Support: Handles global currency formatting and tax calculations
+    
+    Output Structure:
+    - Detailed deliverable estimates with effort, cost, and confidence scores
+    - Comprehensive financial summary with subtotals, tax, and total calculations
+    - Technical assumptions and technology stack recommendations
+    - Risk factors identification and mitigation strategies
+    - Iteration history tracking for modification request processing
+    """
     
     def __init__(self):
         system_prompt = """

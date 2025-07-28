@@ -1,5 +1,39 @@
 """
-Constraints & External Integration Requirements Agent - Boundaries Evaluation
+Constraints & External Integration Requirements Analysis Agent
+
+This agent specializes in evaluating constraints and external integration requirements
+that define the boundaries and limitations within which a software system must operate.
+It focuses on identifying, analyzing, and quantifying the impact of various constraint 
+categories on project complexity and implementation effort.
+
+Key Capabilities:
+- Technical constraint identification and impact assessment
+- External system integration complexity analysis  
+- Legal, regulatory, and compliance requirement evaluation
+- Infrastructure and deployment constraint analysis
+- Resource constraint validation (budget, personnel, timeline)
+- Operational constraint planning (maintenance, support, SLA)
+
+Constraint Categories:
+1. Technical Constraints: Technology restrictions, platform limitations, library dependencies
+2. External Integrations: API integrations, data sync, authentication systems, payment gateways
+3. Compliance & Regulations: Data protection laws, industry standards, security requirements
+4. Infrastructure Constraints: Cloud/on-premises limitations, network restrictions, security policies
+5. Resource Constraints: Budget limitations, team size, timeline pressures, skill availability
+6. Operational Constraints: Support requirements, maintenance windows, SLA commitments
+
+Integration Impact Assessment:
+- External API integration: +15-30% effort increase
+- Legacy system integration: +25-50% effort increase
+- Advanced security/compliance: +20-60% effort increase
+- Complex infrastructure requirements: +20-35% effort increase
+- Resource/timeline constraints: +10-25% effort increase
+
+Architecture Integration:
+- Works in parallel with BusinessRequirementsAgent and QualityRequirementsAgent
+- Provides constraint analysis to EstimationAgent for effort calculation
+- Identifies feasibility risks and mitigation strategies
+- Generates constraint-focused clarification questions for requirement refinement
 """
 
 from typing import Dict, Any, List
@@ -7,7 +41,34 @@ from .base_ai_agent import BaseAIAgent
 
 
 class ConstraintsAgent(BaseAIAgent):
-    """Constraints & External Integration Requirements Agent - Boundaries Perspective Evaluation"""
+    """
+    Constraints & External Integration Requirements Analysis Expert
+    
+    This agent evaluates project constraints and external integration requirements from the
+    "Boundaries" perspective, identifying limitations and dependencies that impact system
+    design, implementation complexity, and overall project feasibility.
+    
+    Core Analysis Domains:
+    1. Technical Constraints: Technology stack limitations, platform restrictions, library constraints
+    2. External Integrations: Third-party API integrations, legacy system connections, data synchronization
+    3. Compliance & Regulations: Legal requirements, industry standards, data protection laws
+    4. Infrastructure Constraints: Deployment environment limitations, network restrictions, security policies
+    5. Resource Constraints: Budget limitations, team capacity, timeline pressures, skill gaps
+    6. Operational Constraints: Maintenance requirements, support structure, SLA commitments
+    
+    Constraint Impact Quantification:
+    - Maps each constraint category to effort impact percentages
+    - Identifies high-risk constraints that could derail project success
+    - Provides feasibility assessment and risk mitigation strategies
+    - Generates constraint-specific improvement questions
+    
+    Output Structure:
+    - Detailed scoring (0-100) for constraint clarity and feasibility
+    - Effort impact percentages for each constraint category  
+    - Feasibility risk assessment with mitigation strategies
+    - Missing elements identification for constraint gap analysis
+    - Constraint-focused questions for requirement clarification
+    """
     
     def __init__(self):
         system_prompt = """

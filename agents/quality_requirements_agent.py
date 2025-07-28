@@ -1,5 +1,35 @@
 """
-Quality & Non-functional Requirements Agent - How Well Evaluation
+Quality & Non-functional Requirements Analysis Agent
+
+This agent specializes in evaluating quality attributes and non-functional requirements (NFRs)
+for software development projects. It assesses the "How Well" aspect of system requirements,
+focusing on performance, security, scalability, reliability, and operational considerations.
+
+Key Capabilities:
+- Performance requirements analysis (response time, throughput, concurrency)
+- Security requirements assessment (authentication, authorization, compliance)
+- Availability and reliability evaluation (uptime targets, disaster recovery)
+- Scalability and maintainability analysis (growth planning, technical debt prevention)
+- Usability requirements validation (accessibility, internationalization)
+- Operational monitoring and observability planning
+
+Quality Impact Assessment:
+- Quantifies effort impact of quality requirements on project estimation
+- Provides percentage-based effort multipliers for different quality attributes
+- Identifies quality risks and mitigation strategies
+- Generates quality-focused clarification questions
+
+Architecture Integration:
+- Works in parallel with BusinessRequirementsAgent and ConstraintsAgent
+- Provides quality evaluation data to EstimationAgent for effort calculation
+- Supports modification request handling for evolving quality requirements
+- Uses structured JSON output format for consistent data exchange
+
+Evaluation Methodology:
+- Scoring system: 0-100 scale for each quality dimension
+- Effort impact calculation: Percentage-based multipliers for complexity factors
+- Risk-based assessment: Identifies quality-related project risks
+- Gap analysis: Highlights missing or inadequate quality specifications
 """
 
 from typing import Dict, Any, List
@@ -7,7 +37,35 @@ from .base_ai_agent import BaseAIAgent
 
 
 class QualityRequirementsAgent(BaseAIAgent):
-    """Quality & Non-functional Requirements Agent - How Well Perspective Evaluation"""
+    """
+    Quality & Non-functional Requirements Analysis Expert
+    
+    This agent evaluates quality attributes and non-functional requirements from the 
+    "How Well" perspective, assessing system quality characteristics that directly 
+    impact implementation complexity and effort estimation.
+    
+    Core Evaluation Domains:
+    1. Performance Requirements: Response time, throughput, concurrent user capacity
+    2. Security Requirements: Authentication, authorization, data protection, compliance
+    3. Availability & Reliability: Uptime targets, fault tolerance, disaster recovery
+    4. Scalability & Maintainability: Growth capacity, code maintainability, technical debt
+    5. Usability Requirements: User experience, accessibility, internationalization
+    6. Operational Monitoring: Logging, metrics, alerting, observability
+    
+    Quality Impact Quantification:
+    - Performance optimization: +20-40% effort increase
+    - Advanced security implementation: +30-50% effort increase  
+    - High availability design: +25-45% effort increase
+    - Internationalization support: +15-30% effort increase
+    - Accessibility compliance: +10-25% effort increase
+    
+    Output Structure:
+    - Detailed scoring (0-100) for each quality dimension
+    - Effort impact percentages for estimation adjustment
+    - Quality-specific improvement questions
+    - Risk factors and mitigation recommendations
+    - Missing elements identification for requirement gaps
+    """
     
     def __init__(self):
         system_prompt = """
